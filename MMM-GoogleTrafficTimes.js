@@ -1,104 +1,141 @@
-Module.register("MMM-GoogleTrafficTimes",{
-
+var self;
+Module.register("MMM-GoogleTrafficTimes", {
         // Module config defaults
-        defaults : {
-                key: '',
-                origin: 'SW1A 1AA',
-                destination1: 'Work:SW1A 2PW',
-                destination2: 'Gym:XXX',
-                destination3: 'School:XXX',
+        defaults: {
+                key: "",
+                mode: "DRIVING",
+                origin: "SW1A 1AA",
+                destination1: "Work:SW1A 2PW",
+                destination2: "Gym:XXX",
+                destination3: "School:XXX",
                 updateInterval: 900000,
-		AvoidHighways: false,
-		AvoidTolls: false,
-		unitSystem: 'METRIC'
-
+                AvoidHighways: false,
+                AvoidTolls: false,
+                unitSystem: "METRIC",
+                showSymbol: true,
+                showSymbolDetails: false,
+                trafficModel: "bestguess",
         },
 
         getStyles: function () {
-                return ["MMM-GoogleTrafficTimes.css"];
+                return ["MMM-GoogleTrafficTimes.css", "font-awesome.css"];
         },
 
-        start: function() {
-        var self = this;
-        Log.info("Starting module: " + this.name);
+        start: function () {
+                self = this;
+                Log.info("Starting module: " + this.name);
 
-        if (this.config.key === "") {
-                Log.error("MMM-GoogleTrafficTimes: API key not provided or valid!");
-                return;
-        }
+                if (this.config.key === "") {
+                        Log.error("MMM-GoogleTrafficTimes: API key not provided or valid!");
+                        return;
+                }
 
-        setInterval(function() {
-                self.updateDom();
-        }, this.config.updateInterval);
-    },
+                setInterval(function () {
+                        self.updateDom();
+                }, this.config.updateInterval);
+        },
 
-	// Override dom generator.
-	getDom: function() {
+        getContent: function (wrapper, destination, time, traffic_time, config) {
+                var container = document.createElement("div");
+                 
+                // base divs
+                var firstLineDiv = document.createElement('div');
+                firstLineDiv.className = 'bright medium mmmtraffic-firstline';
+                var secondLineDiv = document.createElement('div');
+                secondLineDiv.className = 'normal small mmmtraffic-secondline';
+
+                let symbolString = 'car';
+                if (config.mode == 'cycling') symbolString = 'bicycle';
+                if (config.mode == 'walking') symbolString = 'walking';
+                
+                // symbol
+                if (config.showSymbol) {
+                        var symbol = document.createElement('span');
+                        symbol.className = `fa fa-${symbolString} symbol`;
+                        firstLineDiv.appendChild(symbol);
+                }
+
+                // symbol details
+                if (config.showSymbolDetails) {
+                        var symbolDetails = document.createElement('span');
+                        symbolDetails.className = `fa fa-users symbol`;
+                        if(traffic_time.value > time.value)
+                                firstLineDiv.appendChild(symbolDetails);
+                }
+
+                var firstLineText = document.createElement('span');
+                firstLineText.innerHTML = traffic_time.text;
+                firstLineDiv.appendChild(firstLineText);
+                container.appendChild(firstLineDiv);
+
+                secondLineDiv.innerHTML = destination;
+                container.appendChild(secondLineDiv);
+                wrapper.innerHTML += container.innerHTML;
+        },
+
+        // Override dom generator.
+        getDom: function () {
+                var self = this;
                 var origin = this.config.origin;
-                var location1 = this.config.destination1.split(':')[1];
-                var location2 = this.config.destination2.split(':')[1];
-                var location3 = this.config.destination3.split(':')[1];
 
-		var nameList = [];
-                nameList[0] = this.config.destination1.split(':')[0];
-                nameList[1] = this.config.destination2.split(':')[0];
-                nameList[2] = this.config.destination3.split(':')[0];
-               
-		var re1 = new RegExp(location1, 'g');
-                var re2 = new RegExp(location2, 'g');
-                var re3 = new RegExp(location3, 'g');
+                var location1 = this.config.destination1.split(":")[1];
+                var location2 = this.config.destination2.split(":")[1];
+                var location3 = this.config.destination3.split(":")[1];
+                
+                var nameList = [];
+                nameList[0] = this.config.destination1.split(":")[0];
+                nameList[1] = this.config.destination2.split(":")[0];
+                nameList[2] = this.config.destination3.split(":")[0];
 
-		var AvoidHighways = this.config.AvoidHighways;
-		var AvoidTolls = this.config.AvoidTolls;
+                var travelMode = "DRIVING";
+                if (config.mode == 'cycling') travelMode = 'BICYCLING';
+                if (config.mode == 'walking') travelMode = 'WALKING';
+
+                var AvoidHighways = this.config.AvoidHighways;
+                var AvoidTolls = this.config.AvoidTolls;
+                var trafficModel = this.config.trafficModel;
 
                 var wrapper = document.createElement("div");
-		wrapper.style = "text-align:left;font-size:0.65em;line-height:normal";
 
-		var script = document.createElement("script");
+                var script = document.createElement("script");
                 script.type = "text/javascript";
                 script.src = "https://maps.googleapis.com/maps/api/js?key=" + this.config.key;
-                script.setAttribute('defer','');
-                script.setAttribute('async','');
+                script.setAttribute("defer", "");
+                script.setAttribute("async", "");
                 document.body.appendChild(script);
 
-                //var self = this;
+                script.onload = function () {
 
-        script.onload = function () {
-                var geocoder = new google.maps.Geocoder;
-                var service = new google.maps.DistanceMatrixService;
+                        var service = new google.maps.DistanceMatrixService();
 
-        service.getDistanceMatrix({
-          origins: [origin],
-          destinations: [location1, location2, location3],
-          travelMode: 'DRIVING',
-          drivingOptions: {
-                departureTime: new Date(Date.now())
-          },
-          unitSystem: google.maps.UnitSystem.METRIC,
-          avoidHighways: AvoidHighways,
-          avoidTolls: AvoidTolls
-        }, function(response, status) {
-          if (status !== 'OK') {
-            Log.error('Error was: ' + status);
-          } else {
-            var originList = response.originAddresses;
-            var destinationList = response.destinationAddresses;
-            let timings = '';
-
-            for (var i = 0; i < originList.length; i++) {
-              var results = response.rows[i].elements;
-              for (var j = 0; j < results.length; j++) {
-			var trafficIcon = 'CircleIcon';
-			if(typeof(results[j].duration_in_traffic) != 'undefined') {
-				if (results[j].duration_in_traffic.value > results[j].duration.value) {trafficIcon = 'RedCircleIcon'};
-				wrapper.innerHTML += '<span class="' + trafficIcon + '"><span>' +  nameList[j] + '<p></p>' + results[j].duration_in_traffic.text + '</span></span>';
-			}
-
-              }
-            }
-          }
-        });
-	}
-		return wrapper;
-	}
+                        service.getDistanceMatrix(
+                                {
+                                        origins: [origin],
+                                        destinations: [location1, location2, location3],
+                                        travelMode: travelMode,
+                                        drivingOptions: {
+                                                departureTime: new Date(Date.now()),
+                                                trafficModel: trafficModel
+                                        },
+                                        unitSystem: google.maps.UnitSystem.METRIC,
+                                        avoidHighways: AvoidHighways,
+                                        avoidTolls: AvoidTolls
+                                },
+                                function (response, status) {
+                                        if (status !== "OK") {
+                                                Log.error(self.name + " error was: " + status);
+                                        } else {
+                                                
+                                                for (var i = 0; i < response.originAddresses.length; i++) {
+                                                        var results = response.rows[i].elements;
+                                                        for (var j = 0; j < results.length; j++) {                                                               
+                                                                self.getContent(wrapper, nameList[j], results[j].duration, results[j].duration_in_traffic, self.config);
+                                                        }
+                                                }
+                                        }
+                                }
+                        );
+                };
+                return wrapper;
+        },
 });
