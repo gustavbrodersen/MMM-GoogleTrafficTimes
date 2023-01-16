@@ -4,7 +4,7 @@ A module for the MagicMirror that displays driving times from a location to one 
 The results are displayed in response bubbles which have a white circle as long as the travel time in traffic is the same or shorter than the equivalent Google holds excluding traffic data. If the in traffic travle time is longer then th circle border changes to red in order to quickly identify the increased travel time.
 
 # Installation
-Navigate into your MagicMirror's ~/MagicMirror/modules folder and execute git clone https://github.com/pjestico/MMM-GoogleTrafficTimes.git
+Navigate into your MagicMirror's ~/MagicMirror/modules folder and execute git clone https://github.com/Jacopo1891/MMM-GoogleTrafficTimes.git
 A new folder will be created, please navigate into it.
 Run npm install in ~/MagicMirror/modules/MMM-GoogleTrafficTimes to install the module and dependencies.
 
@@ -54,8 +54,21 @@ You will need to enable the following APIs for your key, Maps JavaScript API, Ge
 These are all, at the time of writing (May 2020), available under the free allowance as long as hits to the API are sensible and the default refresh rate of 15 minutes has not resulted in a charge.
 
 # Example Screenshot
-![alt text](https://github.com/pjestico/MMM-GoogleTrafficTimes/blob/master/MMM-GoogleTrafficTimes.png?raw=true)
+* Minimal
 
+![alt text](https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/blob/master/screen/01-minimal_look.png)
+
+* Default
+
+![alt text](https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/blob/master/screen/02-default_look.png)
+
+* Multiple
+
+![alt text](https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/blob/master/screen/03-multiple.png)
+
+* Details (with traffic)
+
+![alt text](https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/blob/master/screen/04-details.png)
 
 # Suggestions
 Please feel free to raise an issue on GitHub for any features you would like to see or usage issues you experience and I will endeavour to address them.
