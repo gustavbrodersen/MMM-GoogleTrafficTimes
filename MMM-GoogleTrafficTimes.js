@@ -59,6 +59,7 @@ Module.register("MMM-GoogleTrafficTimes", {
                 if (config.showSymbolDetails) {
                         // let's give traffic a little gap (1 minute difference is no traffic)
                         var timeWithoutTrafficWithGap = time.value + (time.value * 0,25);
+                        symbolDetails.className = `fa fa-users symbol`;
                         if(traffic_time.value > timeWithoutTrafficWithGap)
                                 firstLineDiv.appendChild(symbolDetails);
                 }
