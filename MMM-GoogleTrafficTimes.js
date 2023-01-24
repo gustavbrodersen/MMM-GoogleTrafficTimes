@@ -57,6 +57,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 
                 // symbol details
                 if (config.showSymbolDetails) {
+                        var symbolDetails = document.createElement('span');
                         // let's give traffic a little gap (1 minute difference is no traffic)
                         var timeWithoutTrafficWithGap = time.value + (time.value * 0,25);
                         symbolDetails.className = `fa fa-users symbol`;
