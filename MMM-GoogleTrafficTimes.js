@@ -55,8 +55,8 @@ Module.register("MMM-GoogleTrafficTimes", {
                         firstLineDiv.appendChild(symbol);
                 }
 
-                // symbol details
-                if (config.showSymbolDetails) {
+                // symbol details only with driving mode, others do not have this info
+                if (this.config.mode == 'DRIVING' && config.showSymbolDetails) {
                         var symbolDetails = document.createElement('span');
                         // let's give traffic a little gap (1 minute difference is no traffic)
                         var timeWithoutTrafficWithGap = time.value + (time.value * 0,25);
@@ -66,7 +66,10 @@ Module.register("MMM-GoogleTrafficTimes", {
                 }
 
                 var firstLineText = document.createElement('span');
-                firstLineText.innerHTML = traffic_time.text;
+                if(this.config.mode == 'DRIVING')
+                        firstLineText.innerHTML = traffic_time.text;
+                else
+                        firstLineText.innerHTML = time.text;
                 firstLineDiv.appendChild(firstLineText);
                 container.appendChild(firstLineDiv);
 
@@ -89,9 +92,9 @@ Module.register("MMM-GoogleTrafficTimes", {
                 nameList[1] = this.config.destination2.split(":")[0];
                 nameList[2] = this.config.destination3.split(":")[0];
 
-                var travelMode = "DRIVING";
-                if (config.mode == 'cycling') travelMode = 'BICYCLING';
-                if (config.mode == 'walking') travelMode = 'WALKING';
+                let travelMode = "DRIVING";
+                if (this.config.mode == 'cycling') travelMode = 'BICYCLING';
+                if (this.config.mode == 'walking') travelMode = 'WALKING';
 
                 var AvoidHighways = this.config.AvoidHighways;
                 var AvoidTolls = this.config.AvoidTolls;
