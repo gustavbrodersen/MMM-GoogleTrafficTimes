@@ -24,7 +24,7 @@ var config = {
                 destination3: 'Beach:XXX',
                 AvoidHighways: false,
                 AvoidTolls: false,
-
+                mode: DRIVING,
             },
         }
     ]
@@ -37,6 +37,7 @@ var config = {
 * destination3 = This is the third location you need travel times to (optional).
 * AvoidHighways = true or false, controls whether Highways are avoided (true) or utilised (false) in routing.
 * AvoidTolls = true or false, controls whether Tolls are avoided (true) or utilised (false) in routing.
+* mode = The mode of transport to use when calculating directions, DRIVING (default), cycling or walking (requests cycling/walking directions via bicycle paths/pedestrian paths - where available)
 
 The Destinations need to be entered in the form Label:Address.
 
