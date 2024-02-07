@@ -14,6 +14,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		showSymbol: true,
 		showSymbolDetails: false,
 		trafficModel: "best_guess",
+		language: "en-EN",
 		debug: false
 	},
 

@@ -35,7 +35,8 @@ module.exports = NodeHelper.create({
 			departure_time: new Date(Date.now()),
 			traffic_model: config.trafficModel,
 			unitSystem: config.unitSystem,
-			avoid: avoid };
+			avoid: avoid,
+			language: config.language };
 
 		var response = await client.distancematrix({ params: request,
 			timeout: 1000 }).then((response) => {
