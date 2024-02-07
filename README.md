@@ -4,9 +4,15 @@ A module for the MagicMirror that displays driving times from a location to one 
 The results are displayed in response bubbles which have a white circle as long as the travel time in traffic is the same or shorter than the equivalent Google holds excluding traffic data. If the in traffic travle time is longer then th circle border changes to red in order to quickly identify the increased travel time.
 
 # Installation
-Navigate into your MagicMirror's ~/MagicMirror/modules folder and execute git clone https://github.com/Jacopo1891/MMM-GoogleTrafficTimes.git
-A new folder will be created, please navigate into it.
-Run npm install in ~/MagicMirror/modules/MMM-GoogleTrafficTimes to install the module and dependencies.
+Navigate into your MagicMirror's ~/MagicMirror/modules folder and execute
+```bash 
+git clone https://github.com/Jacopo1891/MMM-GoogleTrafficTimes.git 
+```
+A new folder will be created, please navigate into it. Once in ~/MagicMirror/modules/MMM-GoogleTrafficTimes run:
+```bash 
+npm install
+```
+to install the module and dependencies.
 
 # Using the module
 To use this module, add it to the modules array in the config/config.js file:
