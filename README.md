@@ -10,7 +10,7 @@ Run npm install in ~/MagicMirror/modules/MMM-GoogleTrafficTimes to install the m
 
 # Using the module
 To use this module, add it to the modules array in the config/config.js file:
-```
+```JavaScript
 var config = {
     modules: [
         {
@@ -25,19 +25,21 @@ var config = {
                 AvoidHighways: false,
                 AvoidTolls: false,
                 mode: DRIVING,
+                debug: false
             },
         }
     ]
 }
 ```
-* key = your Google API key as described in the relevant section of this readme
-* origin = This is the location all travel times to the destinations below will be measured from.
-* destination1 = This is the first location you need travel times to (required).
-* destination2 = This is the second location you need travel times to (optional).
-* destination3 = This is the third location you need travel times to (optional).
-* AvoidHighways = true or false, controls whether Highways are avoided (true) or utilised (false) in routing.
-* AvoidTolls = true or false, controls whether Tolls are avoided (true) or utilised (false) in routing.
-* mode = The mode of transport to use when calculating directions, DRIVING (default), cycling or walking (requests cycling/walking directions via bicycle paths/pedestrian paths - where available)
+* `key`: your Google API key as described in the relevant section of this readme
+* `origin`: This is the location all travel times to the destinations below will be measured from.
+* `destination1`: This is the first location you need travel times to (required).
+* `destination2`: This is the second location you need travel times to (optional).
+* `destination3`: This is the third location you need travel times to (optional).
+* `AvoidHighways`: true or false, controls whether Highways are avoided (true) or utilised (false) in routing.
+* `AvoidTolls`: true or false, controls whether Tolls are avoided (true) or utilised (false) in routing.
+* `mode`: The mode of transport to use when calculating directions, `DRIVING` (default), `cycling` or `walking` (requests cycling/walking directions via bicycle paths/pedestrian paths - where available)
+* `debug`: true or false, shows logs on console (node_helper -> backend, module -> browser).
 
 The Destinations need to be entered in the form Label:Address.
 

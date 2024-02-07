@@ -1,146 +1,137 @@
 var self;
 Module.register("MMM-GoogleTrafficTimes", {
-        // Module config defaults
-        defaults: {
-                key: "",
-                mode: "DRIVING",
-                origin: "SW1A 1AA",
-                destination1: "Work:SW1A 2PW",
-                destination2: "Gym:XXX",
-                destination3: "School:XXX",
-                updateInterval: 900000,
-                AvoidHighways: false,
-                AvoidTolls: false,
-                unitSystem: "METRIC",
-                showSymbol: true,
-                showSymbolDetails: false,
-                trafficModel: "bestguess",
-        },
+	defaults: {
+		key: "",
+		mode: "driving",
+		origin: "SW1A 1AA",
+		destination1: "Work:SW1A 2PW",
+		destination2: "",
+		destination3: "",
+		updateInterval: 900000,
+		AvoidHighways: false,
+		AvoidTolls: false,
+		unitSystem: "metric",
+		showSymbol: true,
+		showSymbolDetails: false,
+		trafficModel: "best_guess",
+		debug: false
+	},
 
-        getStyles: function () {
-                return ["MMM-GoogleTrafficTimes.css", "font-awesome.css"];
-        },
+	getStyles () {
+		return ["MMM-GoogleTrafficTimes.css", "font-awesome.css"];
+	},
 
-        start: function () {
-                self = this;
-                Log.info("Starting module: " + this.name);
+	getScripts () {
+		return [this.file("./Costants.js")];
+	},
 
-                if (this.config.key === "") {
-                        Log.error("MMM-GoogleTrafficTimes: API key not provided or valid!");
-                        return;
-                }
+	start () {
 
-                setInterval(function () {
-                        self.updateDom();
-                }, this.config.updateInterval);
-        },
+		self = this;
+		Log.info(`Starting module: ${this.name}`);
 
-        getContent: function (wrapper, destination, time, traffic_time, config) {
-                var container = document.createElement("div");
-                 
-                // base divs
-                var firstLineDiv = document.createElement('div');
-                firstLineDiv.className = 'bright medium mmmtraffic-firstline';
-                var secondLineDiv = document.createElement('div');
-                secondLineDiv.className = 'normal small mmmtraffic-secondline';
+		if (this.config.key === "") {
+			Log.error(`Module ${this.name}: API key not provided or valid!`);
+			return;
+		}
+		this.times = {};
 
-                let symbolString = 'car';
-                if (config.mode == 'cycling') symbolString = 'bicycle';
-                if (config.mode == 'walking') symbolString = 'walking';
-                
-                // symbol
-                if (config.showSymbol) {
-                        var symbol = document.createElement('span');
-                        symbol.className = `fa fa-${symbolString} symbol`;
-                        firstLineDiv.appendChild(symbol);
-                }
+		this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
+		if (config.debug) Log.info(`Module ${this.name}: notification request send.`);
+		setInterval(function () {
+			self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
+			if (config.debug) Log.info(`Module ${this.name}: notification request send.`);
+		}, this.config.updateInterval);
+	},
 
-                // symbol details only with driving mode, others do not have this info
-                if (this.config.mode == 'DRIVING' && config.showSymbolDetails) {
-                        var symbolDetails = document.createElement('span');
-                        // let's give traffic a little gap (1 minute difference is no traffic)
-                        var timeWithoutTrafficWithGap = time.value + (time.value * 0,25);
-                        symbolDetails.className = `fa fa-users symbol`;
-                        if(traffic_time.value > timeWithoutTrafficWithGap)
-                                firstLineDiv.appendChild(symbolDetails);
-                }
+	async socketNotificationReceived (notification, payload) {
+		if (notification === "GET_GOOGLE_TRAFFIC_TIMES_RESPONSE") {
+			if (self.config.debug) Log.info(`Module ${self.name}: notification response received.`);
+			if (self.config.debug) Log.info(`Module ${self.name}: response -> ${JSON.stringify(payload)}.`);
+			this.times = payload;
+			this.updateDom();
+		}
+	},
 
-                var firstLineText = document.createElement('span');
-                if(this.config.mode == 'DRIVING')
-                        firstLineText.innerHTML = traffic_time.text;
-                else
-                        firstLineText.innerHTML = time.text;
-                firstLineDiv.appendChild(firstLineText);
-                container.appendChild(firstLineDiv);
+	getContent (wrapper, destination, response, config) {
+		if (self.config.debug) Log.info(`Module ${self.name}: inside getContent.`);
+		var time = response.duration;
+		var traffic_time = response.duration_in_traffic;
+		var container = document.createElement("div");
 
-                secondLineDiv.innerHTML = destination;
-                container.appendChild(secondLineDiv);
-                wrapper.innerHTML += container.innerHTML;
-        },
+		var firstLineDiv = document.createElement("div");
+		firstLineDiv.className = "bright medium mmmtraffic-firstline";
+		var secondLineDiv = document.createElement("div");
+		secondLineDiv.className = "normal small mmmtraffic-secondline";
 
-        // Override dom generator.
-        getDom: function () {
-                var self = this;
-                var origin = this.config.origin;
+		var symbolString = this.getSymbol(config.mode);
 
-                var location1 = this.config.destination1.split(":")[1];
-                var location2 = this.config.destination2.split(":")[1];
-                var location3 = this.config.destination3.split(":")[1];
-                
-                var nameList = [];
-                nameList[0] = this.config.destination1.split(":")[0];
-                nameList[1] = this.config.destination2.split(":")[0];
-                nameList[2] = this.config.destination3.split(":")[0];
+		if (config.showSymbol) {
+			var symbol = document.createElement("span");
+			symbol.className = `fa fa-${symbolString} symbol`;
+			firstLineDiv.appendChild(symbol);
+		}
 
-                let travelMode = "DRIVING";
-                if (this.config.mode == 'cycling') travelMode = 'BICYCLING';
-                if (this.config.mode == 'walking') travelMode = 'WALKING';
+		// symbol details only with driving mode, others do not have this info
+		if (this.config.mode == TravelModes.DRIVING && config.showSymbolDetails) {
+			var symbolDetails = document.createElement("span");
+			// let's give traffic a little gap (1 minute difference is no traffic)
+			var timeWithoutTrafficWithGap = time.value + (time.value * 0, 25);
+			symbolDetails.className = "fa fa-users symbol";
+			if (traffic_time.value > timeWithoutTrafficWithGap) firstLineDiv.appendChild(symbolDetails);
+		}
 
-                var AvoidHighways = this.config.AvoidHighways;
-                var AvoidTolls = this.config.AvoidTolls;
-                var trafficModel = this.config.trafficModel;
+		var firstLineText = document.createElement("span");
+		if (this.config.mode == TravelModes.DRIVING) firstLineText.innerHTML = traffic_time.text;
+		else firstLineText.innerHTML = time.text;
+		firstLineDiv.appendChild(firstLineText);
+		container.appendChild(firstLineDiv);
 
-                var wrapper = document.createElement("div");
+		secondLineDiv.innerHTML = destination;
+		container.appendChild(secondLineDiv);
+		wrapper.innerHTML += container.innerHTML;
+	},
 
-                var script = document.createElement("script");
-                script.type = "text/javascript";
-                script.src = "https://maps.googleapis.com/maps/api/js?key=" + this.config.key;
-                script.setAttribute("defer", "");
-                script.setAttribute("async", "");
-                document.body.appendChild(script);
+	getDestinationName (destination) {
+		return destination.split(":")[0];
+	},
 
-                script.onload = function () {
+	getDestinationNames (config) {
+		var names = [];
+		var name = this.getDestinationName(config.destination1);
+		names.push(name);
+		if (config.destination2 !== undefined && config.destination2 !== "") {
+			name = this.getDestinationName(config.destination2);
+			names.push(name);
+		}
+		if (config.destination3 !== undefined && config.destination3 !== "") {
+			name = this.getDestinationName(config.destination3);
+			names.push(name);
+		}
+		return names;
+	},
 
-                        var service = new google.maps.DistanceMatrixService();
+	getSymbol (mode) {
+		var symbolString = TravelSymbols.CAR;
+		if (mode == TravelModes.CYCLING) symbolString = TravelSymbols.BICYCLE;
+		if (mode == TravelModes.WALKING) symbolString = TravelSymbols.WALKING;
+		return symbolString;
+	},
 
-                        service.getDistanceMatrix(
-                                {
-                                        origins: [origin],
-                                        destinations: [location1, location2, location3],
-                                        travelMode: travelMode,
-                                        drivingOptions: {
-                                                departureTime: new Date(Date.now()),
-                                                trafficModel: trafficModel
-                                        },
-                                        unitSystem: google.maps.UnitSystem.METRIC,
-                                        avoidHighways: AvoidHighways,
-                                        avoidTolls: AvoidTolls
-                                },
-                                function (response, status) {
-                                        if (status !== "OK") {
-                                                Log.error(self.name + " error was: " + status);
-                                        } else {
-                                                
-                                                for (var i = 0; i < response.originAddresses.length; i++) {
-                                                        var results = response.rows[i].elements;
-                                                        for (var j = 0; j < results.length; j++) {                                                               
-                                                                self.getContent(wrapper, nameList[j], results[j].duration, results[j].duration_in_traffic, self.config);
-                                                        }
-                                                }
-                                        }
-                                }
-                        );
-                };
-                return wrapper;
-        },
+	// Override dom generator.
+	getDom () {
+		var self = this;
+		if (self.config.debug) Log.info(`Module ${self.name}: inside getDom.`);
+
+		var wrapper = document.createElement("div");
+		var response = self.times;
+		if (response["rows"] !== undefined) {
+			var names = self.getDestinationNames(self.config);
+			var results = response["rows"][0]["elements"];
+			for (var j = 0; j < results.length; j++) {
+				self.getContent(wrapper, names[j], results[j], self.config);
+			}
+		}
+		return wrapper;
+	}
 });

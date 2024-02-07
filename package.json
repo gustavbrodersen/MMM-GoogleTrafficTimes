@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/issues"
   },
-  "homepage": "https://github.com/Jacopo1891/MMM-GoogleTrafficTimes#readme"
+  "homepage": "https://github.com/Jacopo1891/MMM-GoogleTrafficTimes#readme",
+  "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.3.42"
+  }
 }
