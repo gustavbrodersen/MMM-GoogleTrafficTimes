@@ -30,7 +30,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 		self = this;
 		Log.info(`Starting module: ${this.name}`);
-
+		// make sure mode is lower case
+		this.config.mode = this.config.mode.toLowerCase();
 		if (this.config.key === "") {
 			Log.error(`Module ${this.name}: API key not provided or valid!`);
 			return;
@@ -38,10 +39,10 @@ Module.register("MMM-GoogleTrafficTimes", {
 		this.times = {};
 
 		this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
-		if (config.debug) Log.info(`Module ${this.name}: notification request send.`);
+		if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
 		setInterval(function () {
 			self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
-			if (config.debug) Log.info(`Module ${this.name}: notification request send.`);
+			if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
 		}, this.config.updateInterval);
 	},
 
@@ -56,6 +57,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 	getContent (wrapper, destination, response, config) {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getContent.`);
+		if(response.status == "OK"){
 		var time = response.duration;
 		var traffic_time = response.duration_in_traffic;
 		var container = document.createElement("div");
@@ -65,9 +67,9 @@ Module.register("MMM-GoogleTrafficTimes", {
 		var secondLineDiv = document.createElement("div");
 		secondLineDiv.className = "normal small mmmtraffic-secondline";
 
-		var symbolString = this.getSymbol(config.mode);
+		var symbolString = this.getSymbol(self.config.mode);
 
-		if (config.showSymbol) {
+		if (self.config.showSymbol) {
 			var symbol = document.createElement("span");
 			symbol.className = `fa fa-${symbolString} symbol`;
 			firstLineDiv.appendChild(symbol);
@@ -91,6 +93,10 @@ Module.register("MMM-GoogleTrafficTimes", {
 		secondLineDiv.innerHTML = destination;
 		container.appendChild(secondLineDiv);
 		wrapper.innerHTML += container.innerHTML;
+		} 
+		else {
+		  Log.error(this.name+ " destination "+destination+", status = "+response.status);
+		}
 	},
 
 	getDestinationName (destination) {
@@ -99,14 +105,14 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 	getDestinationNames (config) {
 		var names = [];
-		var name = this.getDestinationName(config.destination1);
+		var name = this.getDestinationName(self.config.destination1);
 		names.push(name);
-		if (config.destination2 !== undefined && config.destination2 !== "") {
-			name = this.getDestinationName(config.destination2);
+		if (self.config.destination2 !== undefined && config.destination2 !== "") {
+			name = this.getDestinationName(self.config.destination2);
 			names.push(name);
 		}
-		if (config.destination3 !== undefined && config.destination3 !== "") {
-			name = this.getDestinationName(config.destination3);
+		if (self.config.destination3 !== undefined && config.destination3 !== "") {
+			name = this.getDestinationName(self.config.destination3);
 			names.push(name);
 		}
 		return names;
