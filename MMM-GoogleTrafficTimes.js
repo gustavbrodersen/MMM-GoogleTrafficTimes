@@ -36,6 +36,10 @@ Module.register("MMM-GoogleTrafficTimes", {
 			Log.error(`Module ${this.name}: API key not provided or valid!`);
 			return;
 		}
+		if (this.config.destination1 === "") {
+			Log.error(`Module ${this.name}: destination1 not provided or valid!`);
+			return;
+		}
 		this.times = {};
 
 		this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
