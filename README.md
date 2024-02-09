@@ -5,12 +5,12 @@ The results are displayed in response bubbles which have a white circle as long 
 
 # Table of contents
 - [Installation](#installation)
-- [Using the module](#usingthemodule)
-- [Google API Key](#googleapikey)
+- [Using the module](#using-the-module)
+- [Google API Key](#google-api-key)
 - [Debug](#debug)
-- [Example Screenshot](#examplescreenshot)
+- [Example Screenshot](#example-screenshot)
 - [Suggestions](#suggestions)
-- [Buy me a coffee](#buymeacoffee)
+- [Buy me a coffee](#buy-me-a-coffee)
 
 
 # Installation
