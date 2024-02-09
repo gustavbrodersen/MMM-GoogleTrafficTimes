@@ -3,6 +3,16 @@
 A module for the MagicMirror that displays driving times from a location to one or more destinations based on Google Maps Traffic information. As it uses the times in traffic the values are dynamic as long as there is reasonaby accurate traffic detail available to Google in your area.
 The results are displayed in response bubbles which have a white circle as long as the travel time in traffic is the same or shorter than the equivalent Google holds excluding traffic data. If the in traffic travle time is longer then th circle border changes to red in order to quickly identify the increased travel time.
 
+# Table of contents
+- [Installation](#installation)
+- [Using the module](#usingthemodule)
+- [Google API Key](#googleapikey)
+- [Debug](#debug)
+- [Example Screenshot](#examplescreenshot)
+- [Suggestions](#suggestions)
+- [Buy me a coffee](#buymeacoffee)
+
+
 # Installation
 Navigate into your MagicMirror's ~/MagicMirror/modules folder and execute
 ```bash 
@@ -62,6 +72,20 @@ Whilst the Google API can accept a multitude of formats from addresses to lat&lo
 # Google API Key
 In order to use this module you will need a Google Maps API which is available from the Google GCP console.
 You will need to enable the following APIs for your key, Maps JavaScript API, Geocoding API, Distance Matrix API.
+
+# Debug
+1. Stop any running instance of MagicMirror2.
+2. Make sure you are in the main directory of your project.
+3. Set `debug: true` on config.js as described in installation section.
+3. Execute the following command to start to see all logs.
+```bash 
+npm start dev
+```
+or
+```bash 
+npm start dev | grep MMM-GoogleTrafficTimes
+```
+to see only MMM-GoogleTrafficTimes's logs.
 
 # Example Screenshot
 * Minimal

@@ -55,9 +55,12 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 	},
 
-	getContent (wrapper, destination, response, config) {
+	getContent (wrapper, destination, response) {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getContent.`);
-		if(response.status == "OK"){
+		if (response.status != "OK") {
+			Log.error(`Module ${self.name}: destination ${destination}, status = ${response.status}`);
+			return; }
+
 		var time = response.duration;
 		var traffic_time = response.duration_in_traffic;
 		var container = document.createElement("div");
@@ -76,7 +79,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 
 		// symbol details only with driving mode, others do not have this info
-		if (this.config.mode == TravelModes.DRIVING && config.showSymbolDetails) {
+		if (self.config.mode == TravelModes.DRIVING && config.showSymbolDetails) {
 			var symbolDetails = document.createElement("span");
 			// let's give traffic a little gap (1 minute difference is no traffic)
 			var timeWithoutTrafficWithGap = time.value + (time.value * 0, 25);
@@ -85,7 +88,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 
 		var firstLineText = document.createElement("span");
-		if (this.config.mode == TravelModes.DRIVING) firstLineText.innerHTML = traffic_time.text;
+		if (self.config.mode == TravelModes.DRIVING) firstLineText.innerHTML = traffic_time.text;
 		else firstLineText.innerHTML = time.text;
 		firstLineDiv.appendChild(firstLineText);
 		container.appendChild(firstLineDiv);
@@ -93,17 +96,13 @@ Module.register("MMM-GoogleTrafficTimes", {
 		secondLineDiv.innerHTML = destination;
 		container.appendChild(secondLineDiv);
 		wrapper.innerHTML += container.innerHTML;
-		} 
-		else {
-		  Log.error(this.name+ " destination "+destination+", status = "+response.status);
-		}
 	},
 
 	getDestinationName (destination) {
 		return destination.split(":")[0];
 	},
 
-	getDestinationNames (config) {
+	getDestinationNames () {
 		var names = [];
 		var name = this.getDestinationName(self.config.destination1);
 		names.push(name);
@@ -118,16 +117,15 @@ Module.register("MMM-GoogleTrafficTimes", {
 		return names;
 	},
 
-	getSymbol (mode) {
+	getSymbol () {
 		var symbolString = TravelSymbols.CAR;
-		if (mode == TravelModes.CYCLING) symbolString = TravelSymbols.BICYCLE;
-		if (mode == TravelModes.WALKING) symbolString = TravelSymbols.WALKING;
+		if (self.mode == TravelModes.CYCLING) symbolString = TravelSymbols.BICYCLE;
+		if (self.mode == TravelModes.WALKING) symbolString = TravelSymbols.WALKING;
 		return symbolString;
 	},
 
 	// Override dom generator.
 	getDom () {
-		var self = this;
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getDom.`);
 
 		var wrapper = document.createElement("div");
@@ -136,7 +134,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 			var names = self.getDestinationNames(self.config);
 			var results = response["rows"][0]["elements"];
 			for (var j = 0; j < results.length; j++) {
-				self.getContent(wrapper, names[j], results[j], self.config);
+				self.getContent(wrapper, names[j], results[j]);
 			}
 		}
 		return wrapper;
