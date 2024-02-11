@@ -48,7 +48,7 @@ var config = {
 		        ],
                 avoidHighways: false,
                 avoidTolls: false,
-                mode: DRIVING,
+                mode: 'DRIVING',
                 language: "en-EN",
                 offsetTime: 25,
                 debug: false
