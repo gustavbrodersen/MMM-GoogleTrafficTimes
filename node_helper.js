@@ -25,8 +25,8 @@ module.exports = NodeHelper.create({
 		var destinations = this.getDestinations(config);
 
 		var avoid = [];
-		if (config.AvoidHighways) avoid.push(Restrictions.AVOID_HIGHWAYS);
-		if (config.AvoidTolls) avoid.push(Restrictions.AVOID_TOLLS);
+		if (config.avoidHighways) avoid.push(Restrictions.AVOID_HIGHWAYS);
+		if (config.avoidTolls) avoid.push(Restrictions.AVOID_TOLLS);
 
 		var request = { key: config.key,
 			origins: [config.origin],
@@ -56,21 +56,14 @@ module.exports = NodeHelper.create({
 	},
 
 	getDestinationAddress (destination) {
-		return destination.split(":")[1];
+		return destination.address;
 	},
 
 	getDestinations (config) {
 		var destinations = [];
-		var address1 = this.getDestinationAddress(config.destination1);
-		destinations.push(address1);
-		if (config.destination2 !== undefined && config.destination2 !== "") {
-			var address2 = this.getDestinationAddress(config.destination2);
-			destinations.push(address2);
-		}
-		if (config.destination3 !== undefined && config.destination3 !== "") {
-			var address3 = this.getDestinationAddress(config.destination3);
-			destinations.push(address3);
-		}
+		config.destinations.forEach((destination) => {
+			destinations.push(this.getDestinationAddress(destination));
+		});
 		return destinations;
 	}
 });

@@ -4,17 +4,25 @@ Module.register("MMM-GoogleTrafficTimes", {
 		key: "",
 		mode: "driving",
 		origin: "SW1A 1AA",
-		destination1: "Work:SW1A 2PW",
-		destination2: "",
-		destination3: "",
+		destinations: [
+			{
+				name: "Work",
+				address: "SW1A 2PW"
+			},
+			{
+				name: "Gym",
+				address: "XXX"
+			}
+		],
 		updateInterval: 900000,
-		AvoidHighways: false,
-		AvoidTolls: false,
+		avoidHighways: false,
+		avoidTolls: false,
 		unitSystem: "metric",
 		showSymbol: true,
 		showSymbolDetails: false,
 		trafficModel: "best_guess",
 		language: "en-EN",
+		offsetTime: 25,
 		debug: false
 	},
 
@@ -36,8 +44,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 			Log.error(`Module ${this.name}: API key not provided or valid!`);
 			return;
 		}
-		if (this.config.destination1 === "") {
-			Log.error(`Module ${this.name}: destination1 not provided or valid!`);
+		if (this.config.destinations === "" || this.config.destinations.length == 0) {
+			Log.error(`Module ${this.name}: destinations not provided or valid!`);
 			return;
 		}
 		this.times = {};
@@ -83,10 +91,10 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 
 		// symbol details only with driving mode, others do not have this info
-		if (self.config.mode == TravelModes.DRIVING && config.showSymbolDetails) {
+		if (self.config.mode == TravelModes.DRIVING && self.config.showSymbolDetails) {
 			var symbolDetails = document.createElement("span");
 			// let's give traffic a little gap (1 minute difference is no traffic)
-			var timeWithoutTrafficWithGap = time.value + (time.value * 0, 25);
+			var timeWithoutTrafficWithGap = time.value + (time.value * (self.offsetTime / 100));
 			symbolDetails.className = "fa fa-users symbol";
 			if (traffic_time.value > timeWithoutTrafficWithGap) firstLineDiv.appendChild(symbolDetails);
 		}
@@ -103,21 +111,15 @@ Module.register("MMM-GoogleTrafficTimes", {
 	},
 
 	getDestinationName (destination) {
-		return destination.split(":")[0];
+		return destination.name;
 	},
 
 	getDestinationNames () {
 		var names = [];
-		var name = this.getDestinationName(self.config.destination1);
-		names.push(name);
-		if (self.config.destination2 !== undefined && config.destination2 !== "") {
-			name = this.getDestinationName(self.config.destination2);
-			names.push(name);
-		}
-		if (self.config.destination3 !== undefined && config.destination3 !== "") {
-			name = this.getDestinationName(self.config.destination3);
-			names.push(name);
-		}
+		self.config.destinations.forEach((destination) => {
+			names.push(this.getDestinationName(destination));
+		});
+
 		return names;
 	},
 
@@ -134,7 +136,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 		var wrapper = document.createElement("div");
 		var response = self.times;
-		if (response["rows"] !== undefined) {
+		if (response !== undefined && response["rows"] !== undefined && response["rows"].length > 0) {
 			var names = self.getDestinationNames(self.config);
 			var results = response["rows"][0]["elements"];
 			for (var j = 0; j < results.length; j++) {

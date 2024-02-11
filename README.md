@@ -7,6 +7,7 @@ The results are displayed in response bubbles which have a white circle as long 
 - [Installation](#installation)
 - [Using the module](#using-the-module)
 - [Google API Key](#google-api-key)
+ -[Offset](#offset)
 - [Debug](#debug)
 - [Example Screenshot](#example-screenshot)
 - [Suggestions](#suggestions)
@@ -35,13 +36,21 @@ var config = {
             config: {
                 key: 'YOUR_KEY',
                 origin: 'SW1A 1AA',
-                destination1: 'Work:SW1A 2PW',
-                destination2: 'Gym:XXX',
-                destination3: 'Beach:XXX',
-                AvoidHighways: false,
-                AvoidTolls: false,
+                destinations: [
+			        {
+			        	name: "Work",
+			        	address: "SW1A 2PW"
+			        },
+			        {
+			        	name: "Gym",
+			        	address: "XXX"
+			        }
+		        ],
+                avoidHighways: false,
+                avoidTolls: false,
                 mode: DRIVING,
                 language: "en-EN",
+                offsetTime: 25,
                 debug: false
             },
         }
@@ -50,20 +59,26 @@ var config = {
 ```
 * `key`: your Google API key as described in the relevant section of this readme
 * `origin`: This is the location all travel times to the destinations below will be measured from.
-* `destination1`: This is the first location you need travel times to (required).
-* `destination2`: This is the second location you need travel times to (optional).
-* `destination3`: This is the third location you need travel times to (optional).
-* `AvoidHighways`: true or false, controls whether Highways are avoided (true) or utilised (false) in routing.
-* `AvoidTolls`: true or false, controls whether Tolls are avoided (true) or utilised (false) in routing.
+* `destinations`: Those are the locations you need travel times to (min 1, max 20).
+* `avoidHighways`: true or false, controls whether Highways are avoided (true) or utilised (false) in routing.
+* `avoidTolls`: true or false, controls whether Tolls are avoided (true) or utilised (false) in routing.
 * `mode`: The mode of transport to use when calculating directions, `DRIVING` (default), `cycling` or `walking` (requests cycling/walking directions via bicycle paths/pedestrian paths - where available)
 * `language`: Set languages, default `en-EN`. (`fr-FR`, `de-DE`, `it-IT`)
+* `offsetTime`: Percentage to decide if there is traffic and show symbol. See paragraph to undestand logic and edit properly.
 * `debug`: true or false, shows logs on console (node_helper -> backend, module -> browser).
 
-The Destinations need to be entered in the form Label:Address.
+The Destinations need to be entered in the form
+```javascript
+[
+    {
+       	name: "Work",
+       	address: "SW1A 2PW"
+    }
+]
+```
+In the example config for Destination 1 we have a Label of Work with an Address of SW1A 2PW.
 
-In the example config above for Destination 1 we have a Label of Work with an Address of SW1A 2PW.
-
-The Label appears as the title for each result bubble as shown in the Example Screenshot below.
+The Label `name` appears as the title for each result as shown in the Example Screenshot below.
 
 In this release the origin and destination addresses have been tested across a large number of countries but certainly not all.
 
@@ -72,6 +87,12 @@ Whilst the Google API can accept a multitude of formats from addresses to lat&lo
 # Google API Key
 In order to use this module you will need a Google Maps API which is available from the Google GCP console.
 You will need to enable the following APIs for your key, Maps JavaScript API, Geocoding API, Distance Matrix API.
+
+# Offset
+To determine if the road is busy or not, I decided to add the optimal time (meaning without traffic by Google Matrix) with an offset obtained using this simple formula:
+`optimalTime + (optimalTime * offset)`
+If the estimated time from Google Matrix is greater than this value, it means there is traffic, and the symbol is displayed.
+By default, the offset is set to 25%, which seems like a good compromise.
 
 # Debug
 1. Stop any running instance of MagicMirror2.
