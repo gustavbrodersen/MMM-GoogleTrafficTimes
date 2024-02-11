@@ -7,7 +7,7 @@ The results are displayed in response bubbles which have a white circle as long 
 - [Installation](#installation)
 - [Using the module](#using-the-module)
 - [Google API Key](#google-api-key)
- -[Offset](#offset)
+- [Offset Time](#offset-time)
 - [Debug](#debug)
 - [Example Screenshot](#example-screenshot)
 - [Suggestions](#suggestions)
@@ -88,7 +88,7 @@ Whilst the Google API can accept a multitude of formats from addresses to lat&lo
 In order to use this module you will need a Google Maps API which is available from the Google GCP console.
 You will need to enable the following APIs for your key, Maps JavaScript API, Geocoding API, Distance Matrix API.
 
-# Offset
+# Offset Time
 To determine if the road is busy or not, I decided to add the optimal time (meaning without traffic by Google Matrix) with an offset obtained using this simple formula:
 `optimalTime + (optimalTime * offset)`
 If the estimated time from Google Matrix is greater than this value, it means there is traffic, and the symbol is displayed.
