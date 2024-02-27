@@ -45,14 +45,18 @@ module.exports = NodeHelper.create({
 			});
 			return response;
 		}).catch((error) => {
-			Log.info(error.response.data.error_message);
+			Log.error(`Module ${this.name}: error -> ${JSON.stringify(error.message)}.`);
 		});
 		return response;
 	},
 
 	sendResponse (response, config) {
 		if (config.debug) Log.info(`Module ${this.name}: notification response send.`);
-		this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES_RESPONSE", response.data);
+		if (response !== undefined && response.data !== undefined) this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES_RESPONSE", response.data);
+		else {
+			this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES_RESPONSE", {});
+			Log.info(`Module ${this.name}: response NodeHelper: error calling google api.`);
+		}
 	},
 
 	getDestinationAddress (destination) {

@@ -9,3 +9,8 @@
 .mmmtraffic-firstline{
     padding-top:15px;
 }
+
+.mmmtraffic-updateline {
+    font-style: italic;
+    font-size: medium;
+}
