@@ -46,25 +46,31 @@ var config = {
 			        	address: "XXX"
 			        }
 		        ],
+                updateInterval: 900000,
                 avoidHighways: false,
                 avoidTolls: false,
-                mode: 'DRIVING',
+                mode: 'driving',
                 language: "en-EN",
                 offsetTime: 25,
+		        lastUpdate: true,
+		        timeLastUpdateWarning: 1,
                 debug: false
             },
         }
     ]
 }
 ```
-* `key`: your Google API key as described in the relevant section of this readme
+* `key`: Your Google API key as described in the relevant section of this readme
 * `origin`: This is the location all travel times to the destinations below will be measured from.
 * `destinations`: Those are the locations you need travel times to (min 1, max 20).
+* `updateInterval`: Time (in milliseconds) before refreshing data. Default: 900000 -> 15 minutes.
 * `avoidHighways`: true or false, controls whether Highways are avoided (true) or utilised (false) in routing.
 * `avoidTolls`: true or false, controls whether Tolls are avoided (true) or utilised (false) in routing.
-* `mode`: The mode of transport to use when calculating directions, `DRIVING` (default), `cycling` or `walking` (requests cycling/walking directions via bicycle paths/pedestrian paths - where available)
+* `mode`: The mode of transport to use when calculating directions, `driving` (default), `cycling` or `walking` (requests cycling/walking directions via bicycle paths/pedestrian paths - where available)
 * `language`: Set languages, default `en-EN`. (`fr-FR`, `de-DE`, `it-IT`)
 * `offsetTime`: Percentage to decide if there is traffic and show symbol. See paragraph to undestand logic and edit properly.
+* `lastUpdate`: true or false, shows a warning message if data is not updated.
+* `timeLastUpdateWarning`: Specifies time (in minutes) that have to elapse since last failed data update to display the warning message. (Default 1 minute.)
 * `debug`: true or false, shows logs on console (node_helper -> backend, module -> browser).
 
 The Destinations need to be entered in the form
@@ -124,6 +130,10 @@ to see only MMM-GoogleTrafficTimes's logs.
 * Details (with traffic)
 
 ![alt text](https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/blob/master/screen/04-details.png)
+
+* Warning message update
+
+![alt text](https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/blob/master/screen/05-last_update.png)
 
 # Suggestions
 Please feel free to raise an issue on GitHub for any features you would like to see or usage issues you experience and I will endeavour to address them.

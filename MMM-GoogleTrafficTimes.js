@@ -23,8 +23,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 		trafficModel: "best_guess",
 		language: "en-EN",
 		offsetTime: 25,
-		lastUpdate: false,
-		timeLastUpdateWarning: 60000,
+		lastUpdate: true,
+		timeLastUpdateWarning: 1,
 		debug: false
 	},
 
