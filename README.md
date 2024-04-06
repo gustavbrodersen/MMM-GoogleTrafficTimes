@@ -106,14 +106,14 @@ If the estimated time from Google Matrix is greater than this value, it means th
 By default, the offset is set to 25%, which seems like a good compromise.
 
 # Schedules
-The schedules parameter accepts an array of objects, each representing a schedule for module display. Each object in the list must include the following keys:
-
-`days`: An array of numbers representing the days of the week to apply the schedule. Day numbers correspond to the following values: 0 (Sunday) to 6 (Saturday). For example, [0, 1, 2, 3, 4] indicates that the schedule applies from Sunday to Thursday.
-`startHH`: The starting hour of the schedule (in 24-hour format).
-`startMM`: The starting minute of the schedule.
-`endHH`: The ending hour of the schedule (in 24-hour format).
-`endMM`: The ending minute of the schedule.
-If the days array is empty, the content will be displayed at all times.
+The schedules parameter accepts an array of objects, each representing a schedule for module display.  
+Each object in the list must include the following keys:  
+`days`: An array of numbers representing the days of the week to apply the schedule. Day numbers correspond to the following values: 0 (Sunday) to 6 (Saturday). For example, [0, 1, 2, 3, 4] indicates that the schedule applies from Sunday to Thursday.  
+`startHH`: The starting hour of the schedule (in 24-hour format).  
+`startMM`: The starting minute of the schedule.  
+`endHH`: The ending hour of the schedule (in 24-hour format).  
+`endMM`: The ending minute of the schedule.  
+If the days array is empty, the content will be displayed at all times.  
 
 Here's an example of how to configure the schedules parameter:
 ```javascript
@@ -139,10 +139,10 @@ schedules: [
     }
 ]
 ```
-This example sets up three schedules:
-From Sunday to Thursday, display content from 08:00 to 17:30.
-On Friday, display content from 08:30.
-Display content at all times when the days array is empty.
+This example sets up three schedules:  
+From Sunday to Thursday, display content from 08:00 to 17:30.  
+On Friday, display content from 08:30.  
+Display content at all times when the days array is empty.  
 
 # Debug
 1. Stop any running instance of MagicMirror2.
