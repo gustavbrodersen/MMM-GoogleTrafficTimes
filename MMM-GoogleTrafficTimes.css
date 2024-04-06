@@ -1,6 +1,6 @@
 .symbol {
     margin-right: 15px;
-  }
+}
 
 #detailedSummary td {
     padding-right: 10px;
@@ -13,4 +13,12 @@
 .mmmtraffic-updateline {
     font-style: italic;
     font-size: medium;
+}
+
+.mmmtraffic-horizontaly {
+    display: flex;
+}
+
+.mmmtraffic-container {
+    margin: 0 1em;
 }

@@ -1,13 +1,14 @@
 # Module: Google Traffic Times
 
 A module for the MagicMirror that displays driving times from a location to one or more destinations based on Google Maps Traffic information. As it uses the times in traffic the values are dynamic as long as there is reasonaby accurate traffic detail available to Google in your area.
-The results are displayed in response bubbles which have a white circle as long as the travel time in traffic is the same or shorter than the equivalent Google holds excluding traffic data. If the in traffic travle time is longer then th circle border changes to red in order to quickly identify the increased travel time.
+If the in traffic travel time is longer then a symbol will be showed.
 
 # Table of contents
 - [Installation](#installation)
 - [Using the module](#using-the-module)
 - [Google API Key](#google-api-key)
 - [Offset Time](#offset-time)
+- [Schedules](#schedules)
 - [Debug](#debug)
 - [Example Screenshot](#example-screenshot)
 - [Suggestions](#suggestions)
@@ -54,6 +55,8 @@ var config = {
                 offsetTime: 25,
 		        lastUpdate: true,
 		        timeLastUpdateWarning: 1,
+                horizontalLayout: false,
+                schedules: [],
                 debug: false
             },
         }
@@ -71,6 +74,8 @@ var config = {
 * `offsetTime`: Percentage to decide if there is traffic and show symbol. See paragraph to undestand logic and edit properly.
 * `lastUpdate`: true or false, shows a warning message if data is not updated.
 * `timeLastUpdateWarning`: Specifies time (in minutes) that have to elapse since last failed data update to display the warning message. (Default 1 minute.)
+* `horizontalLayout`: true or false, Organize results on horizonal line. (Default false.)
+* `schedules`: parameter accepts an array of objects, each representing a schedule for content display (Default empty -> the module will be displayed at all times)
 * `debug`: true or false, shows logs on console (node_helper -> backend, module -> browser).
 
 The Destinations need to be entered in the form
@@ -99,6 +104,45 @@ To determine if the road is busy or not, I decided to add the optimal time (mean
 `optimalTime + (optimalTime * offset)`
 If the estimated time from Google Matrix is greater than this value, it means there is traffic, and the symbol is displayed.
 By default, the offset is set to 25%, which seems like a good compromise.
+
+# Schedules
+The schedules parameter accepts an array of objects, each representing a schedule for module display. Each object in the list must include the following keys:
+
+`days`: An array of numbers representing the days of the week to apply the schedule. Day numbers correspond to the following values: 0 (Sunday) to 6 (Saturday). For example, [0, 1, 2, 3, 4] indicates that the schedule applies from Sunday to Thursday.
+`startHH`: The starting hour of the schedule (in 24-hour format).
+`startMM`: The starting minute of the schedule.
+`endHH`: The ending hour of the schedule (in 24-hour format).
+`endMM`: The ending minute of the schedule.
+If the days array is empty, the content will be displayed at all times.
+
+Here's an example of how to configure the schedules parameter:
+```javascript
+schedules: [
+    {
+        days: [0, 1, 2, 3, 4], // From Sunday to Thursday
+        startHH: "08",
+        startMM: "00",
+        endHH: "17",
+        endMM: "30"
+    },
+    {
+        days: [5], // Friday
+        startHH: "08",
+        startMM: "30",
+    },
+    {
+        days: [], // Display at all times
+        startHH: null,
+        startMM: null,
+        endHH: null,
+        endMM: null
+    }
+]
+```
+This example sets up three schedules:
+From Sunday to Thursday, display content from 08:00 to 17:30.
+On Friday, display content from 08:30.
+Display content at all times when the days array is empty.
 
 # Debug
 1. Stop any running instance of MagicMirror2.
@@ -134,6 +178,10 @@ to see only MMM-GoogleTrafficTimes's logs.
 * Warning message update
 
 ![alt text](https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/blob/master/screen/05-last_update.png)
+
+* Horizontal
+
+![alt text](https://github.com/Jacopo1891/MMM-GoogleTrafficTimes/blob/master/screen/06-horizontal_look.png)
 
 # Suggestions
 Please feel free to raise an issue on GitHub for any features you would like to see or usage issues you experience and I will endeavour to address them.

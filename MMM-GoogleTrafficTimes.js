@@ -25,6 +25,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 		offsetTime: 25,
 		lastUpdate: true,
 		timeLastUpdateWarning: 1,
+		horizontalLayout: false,
+		schedules: [],
 		debug: false
 	},
 
@@ -40,7 +42,6 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 		self = this;
 		Log.info(`Starting module: ${this.name}`);
-		// make sure mode is lower case
 		this.config.mode = this.config.mode.toLowerCase();
 		if (this.config.key === "") {
 			Log.error(`Module ${this.name}: API key not provided or valid!`);
@@ -53,12 +54,40 @@ Module.register("MMM-GoogleTrafficTimes", {
 		this.times = {};
 		this.time = "";
 
-		this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
-		if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
-		setInterval(function () {
-			self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
+		if (self.isScheduledNow()) {
+			this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
 			if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
-		}, this.config.updateInterval);
+			setInterval(function () {
+				self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
+				if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
+			}, this.config.updateInterval);
+		}
+	},
+
+	isScheduledNow () {
+		if (self.config.schedules && self.config.schedules.length === 0) return true;
+		var now = new Date();
+		var currentDay = now.getDay();
+		var currentHour = now.getHours();
+		var currentMinute = now.getMinutes();
+
+		for (var item of self.config.schedules) {
+			if (item.days.includes(currentDay)) {
+				const startHH = item.startHH === null || item.startHH === undefined || item.startHH === "" ? null : parseInt(item.startHH);
+				const startMM = item.startMM === null || item.startMM === undefined || item.startMM === "" ? null : parseInt(item.startMM);
+				const endHH = item.endHH === null || item.endHH === undefined || item.endHH === "" ? null : parseInt(item.endHH);
+				const endMM = item.endMM === null || item.endMM === undefined || item.endMM === "" ? null : parseInt(item.endMM);
+
+				if ((startHH === null && endHH === null)
+				  || (startHH === null && currentHour < endHH)
+				  || (endHH === null && currentHour > startHH)
+				  || ((currentHour > startHH || (currentHour === startHH && currentMinute >= startMM))
+				  && (currentHour < endHH || (currentHour === endHH && currentMinute < endMM)))
+				) return true;
+			}
+		}
+		if (self.config.debug) Log.info(`Module ${self.name}: now is not in schedules.`);
+		return false;
 	},
 
 	async socketNotificationReceived (notification, payload) {
@@ -102,7 +131,9 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 		var time = response.duration;
 		var traffic_time = response.duration_in_traffic;
+		var wrapper = document.createElement("div");
 		var container = document.createElement("div");
+		container.className = "mmmtraffic-container";
 
 		var firstLineDiv = document.createElement("div");
 		firstLineDiv.className = "bright medium mmmtraffic-firstline";
@@ -137,7 +168,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 		secondLineDiv.innerHTML = destination;
 		container.appendChild(secondLineDiv);
-		return container.innerHTML;
+		wrapper.appendChild(container);
+		return wrapper.innerHTML;
 	},
 
 	getLastUpdateContent () {
@@ -189,6 +221,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 	getDom () {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getDom.`);
 		var wrapper = document.createElement("div");
+		if (self.config.horizontalLayout) wrapper.className = "mmmtraffic-horizontaly";
 		self.getContent(wrapper);
 		return wrapper;
 	}
