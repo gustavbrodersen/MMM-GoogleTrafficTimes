@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Jacopo1891/MMM-GoogleTrafficTimes#readme",
   "dependencies": {
-    "@googlemaps/google-maps-services-js": "^3.3.42"
+    "@googlemaps/google-maps-services-js": "^3.3.42",
+    "core-js":"^3.37.1"
   }
 }

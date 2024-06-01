@@ -39,7 +39,7 @@ module.exports = NodeHelper.create({
 			language: config.language };
 
 		var response = await client.distancematrix({ params: request,
-			timeout: 1000 }).then((response) => {
+			timeout: 3000 }).then((response) => {
 			response.data.rows[0].elements.forEach((element) => {
 				if (config.debug) Log.info(`Module ${this.name}: response -> ${JSON.stringify(element)}.`);
 			});
