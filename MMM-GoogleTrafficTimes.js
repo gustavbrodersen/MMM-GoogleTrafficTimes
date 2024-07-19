@@ -72,7 +72,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		var currentMinute = now.getMinutes();
 
 		for (var item of self.config.schedules) {
-			if (item.days.includes(currentDay)) {
+			if (item.days.includes(currentDay) || item.days.length === 0) {
 				const startHH = item.startHH === null || item.startHH === undefined || item.startHH === "" ? null : parseInt(item.startHH);
 				const startMM = item.startMM === null || item.startMM === undefined || item.startMM === "" ? null : parseInt(item.startMM);
 				const endHH = item.endHH === null || item.endHH === undefined || item.endHH === "" ? null : parseInt(item.endHH);
