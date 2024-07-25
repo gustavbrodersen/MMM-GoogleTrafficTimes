@@ -54,14 +54,13 @@ Module.register("MMM-GoogleTrafficTimes", {
 		this.times = {};
 		this.time = "";
 
-		if (self.isScheduledNow()) {
-			this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
+		this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
+		if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
+		setInterval(function () {
+			self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
 			if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
-			setInterval(function () {
-				self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
-				if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
-			}, this.config.updateInterval);
-		}
+		}, this.config.updateInterval);
+		
 	},
 
 	isScheduledNow () {
@@ -222,7 +221,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getDom.`);
 		var wrapper = document.createElement("div");
 		if (self.config.horizontalLayout) wrapper.className = "mmmtraffic-horizontaly";
-		self.getContent(wrapper);
+		if (self.isScheduledNow())
+			self.getContent(wrapper);
 		return wrapper;
 	}
 });
