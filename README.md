@@ -50,9 +50,10 @@ var config = {
                 updateInterval: 900000,
                 avoidHighways: false,
                 avoidTolls: false,
-                mode: 'driving',
+                avoidFerries: false,
+                mode: 'drive',
                 language: "en-EN",
-                offsetTime: 25,
+                offsetTimePercentage: 25,
 		        lastUpdate: true,
 		        timeLastUpdateWarning: 1,
                 horizontalLayout: false,
@@ -69,9 +70,10 @@ var config = {
 * `updateInterval`: Time (in milliseconds) before refreshing data. Default: 900000 -> 15 minutes.
 * `avoidHighways`: true or false, controls whether Highways are avoided (true) or utilised (false) in routing.
 * `avoidTolls`: true or false, controls whether Tolls are avoided (true) or utilised (false) in routing.
-* `mode`: The mode of transport to use when calculating directions, `driving` (default), `cycling` or `walking` (requests cycling/walking directions via bicycle paths/pedestrian paths - where available)
+* `avoidFerries`: true or false, controls whether Ferries are avoided (true) or utilised (false) in routing.
+* `mode`: The mode of transport to use when calculating directions, `drive` (default), `bicycle` or `walk` (requests cycling/walking directions via bicycle paths/pedestrian paths - where available)
 * `language`: Set languages, default `en-EN`. (`fr-FR`, `de-DE`, `it-IT`)
-* `offsetTime`: Percentage to decide if there is traffic and show symbol. See paragraph to undestand logic and edit properly.
+* `offsetTimePercentage`: Percentage to decide if there is traffic and show symbol. See paragraph to undestand logic and edit properly.
 * `lastUpdate`: true or false, shows a warning message if data is not updated.
 * `timeLastUpdateWarning`: Specifies time (in minutes) that have to elapse since last failed data update to display the warning message. (Default 1 minute.)
 * `horizontalLayout`: true or false, Organize results on horizonal line. (Default false.)
@@ -101,7 +103,7 @@ You will need to enable the following APIs for your key, Maps JavaScript API, Ge
 
 # Offset Time
 To determine if the road is busy or not, I decided to add the optimal time (meaning without traffic by Google Matrix) with an offset obtained using this simple formula:
-`optimalTime + (optimalTime * offset)`
+`timeWithoutTraffic + (timeWithoutTraffic * offset)`
 If the estimated time from Google Matrix is greater than this value, it means there is traffic, and the symbol is displayed.
 By default, the offset is set to 25%, which seems like a good compromise.
 

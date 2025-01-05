@@ -2,7 +2,7 @@ var self;
 Module.register("MMM-GoogleTrafficTimes", {
 	defaults: {
 		key: "",
-		mode: "driving",
+		mode: "drive",
 		origin: "SW1A 1AA",
 		destinations: [
 			{
@@ -17,12 +17,13 @@ Module.register("MMM-GoogleTrafficTimes", {
 		updateInterval: 900000,
 		avoidHighways: false,
 		avoidTolls: false,
+		avoidFerries: false,
 		unitSystem: "metric",
 		showSymbol: true,
 		showSymbolDetails: false,
 		trafficModel: "best_guess",
 		language: "en-EN",
-		offsetTime: 25,
+		offsetTimePercentage: 25,
 		lastUpdate: true,
 		timeLastUpdateWarning: 1,
 		horizontalLayout: false,
@@ -30,15 +31,15 @@ Module.register("MMM-GoogleTrafficTimes", {
 		debug: false
 	},
 
-	getStyles () {
+	getStyles() {
 		return ["MMM-GoogleTrafficTimes.css", "font-awesome.css"];
 	},
 
-	getScripts () {
-		return [this.file("./Costants.js")];
+	getScripts() {
+		return [this.file("./Constants.js")];
 	},
 
-	start () {
+	start() {
 
 		self = this;
 		Log.info(`Starting module: ${this.name}`);
@@ -47,23 +48,24 @@ Module.register("MMM-GoogleTrafficTimes", {
 			Log.error(`Module ${this.name}: API key not provided or valid!`);
 			return;
 		}
-		if (this.config.destinations === "" || this.config.destinations.length == 0) {
+		if (this.config.destinations === "" || this.config.destinations.length === 0) {
 			Log.error(`Module ${this.name}: destinations not provided or valid!`);
 			return;
 		}
 		this.times = {};
-		this.time = "";
 
-		this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
+		self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
 		if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
 		setInterval(function () {
-			self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
-			if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
+			if (self.isScheduledNow()) {
+				self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
+				if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
+			}
 		}, this.config.updateInterval);
-		
+
 	},
 
-	isScheduledNow () {
+	isScheduledNow() {
 		if (self.config.schedules && self.config.schedules.length === 0) return true;
 		var now = new Date();
 		var currentDay = now.getDay();
@@ -78,10 +80,10 @@ Module.register("MMM-GoogleTrafficTimes", {
 				const endMM = item.endMM === null || item.endMM === undefined || item.endMM === "" ? null : parseInt(item.endMM);
 
 				if ((startHH === null && endHH === null)
-				  || (startHH === null && currentHour < endHH)
-				  || (endHH === null && currentHour > startHH)
-				  || ((currentHour > startHH || (currentHour === startHH && currentMinute >= startMM))
-				  && (currentHour < endHH || (currentHour === endHH && currentMinute < endMM)))
+					|| (startHH === null && currentHour < endHH)
+					|| (endHH === null && currentHour > startHH)
+					|| ((currentHour > startHH || (currentHour === startHH && currentMinute >= startMM))
+						&& (currentHour < endHH || (currentHour === endHH && currentMinute < endMM)))
 				) return true;
 			}
 		}
@@ -89,13 +91,12 @@ Module.register("MMM-GoogleTrafficTimes", {
 		return false;
 	},
 
-	async socketNotificationReceived (notification, payload) {
+	async socketNotificationReceived(notification, payload) {
 		if (notification === "GET_GOOGLE_TRAFFIC_TIMES_RESPONSE") {
 			if (self.config.debug) Log.info(`Module ${self.name}: notification response received.`);
 			if (self.config.debug) Log.info(`Module ${self.name}: response -> ${JSON.stringify(payload)}.`);
 
-			if (self.checkResponseIsOk(payload))
-			{
+			if (self.checkResponseIsOk(payload)) {
 				self.times = payload;
 				self.timeLastUpdate = new Date();
 			}
@@ -103,33 +104,34 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 	},
 
-	getLastHHMM () {
+	getLastHHMM() {
 		let hour = self.timeLastUpdate.getHours();
 		let minute = self.timeLastUpdate.getMinutes();
 		return `${self.formatTimeUnit(hour)}:${self.formatTimeUnit(minute)}`;
 	},
 
-	formatTimeUnit (unit) {
+	formatTimeUnit(unit) {
 		return unit.toString().padStart(2, "0");
 	},
 
-	getContent (wrapper) {
+	getContent(wrapper) {
 		if (self.checkResponseIsOk(self.times)) {
 			var names = self.getDestinationNames(self.config);
-			var results = self.times["rows"][0]["elements"];
-			for (var j = 0; j < results.length; j++) wrapper.innerHTML += self.getDestinationContent(names[j], results[j]);
+			var results = self.times;
+			for (var j = 0; j < results.length; j++) wrapper.innerHTML += self.getDestinationContent(names[j], results.find((element) => element.destinationIndex === j));
 		}
 		if (self.config.lastUpdate && self.isTimesOld()) wrapper.innerHTML += self.getLastUpdateContent();
 	},
 
-	getDestinationContent (destination, response) {
+	getDestinationContent(destination, response) {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getDestinationContent.`);
-		if (response.status != "OK") {
-			Log.error(`Module ${self.name}: destination ${destination}, status = ${response.status}`);
-			return; }
+		if (response.condition === "ROUTE_NOT_FOUND") {
+			Log.error(`Module ${self.name}: destination ${destination}, condition = ${response.condition}, = ${response.status}`);
+			return;
+		}
 
-		var time = response.duration;
-		var traffic_time = response.duration_in_traffic;
+		var timeInSeconds = response.staticDuration.seconds;
+		var timeInSecondsWithTraffic = response.duration.seconds;
 		var wrapper = document.createElement("div");
 		var container = document.createElement("div");
 		container.className = "mmmtraffic-container";
@@ -149,19 +151,19 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 		// symbol details only with driving mode, others do not have this info
 		if (self.config.debug) Log.info(`Module ${this.name}: showSymbolDetails ${self.config.showSymbolDetails}.`);
-		if (self.config.mode == TravelModes.DRIVING && self.config.showSymbolDetails) {
+		if (self.config.mode === TravelModes.DRIVE && self.config.showSymbolDetails) {
 			var symbolDetails = document.createElement("span");
-			// let's give traffic a little gap (1 minute difference is no traffic)
-			var timeWithoutTrafficWithGap = time.value + (time.value * (self.config.offsetTime / 100));
+			// let's give traffic a little gap of offsetTimePercentage before showing the traffic symbol
+			var timeWithoutTrafficWithGap = timeInSeconds + (timeInSeconds * (self.config.offsetTimePercentage / 100));
 			symbolDetails.className = "fa fa-users symbol";
-			if (self.config.debug) Log.info(`Module ${this.name}: traffic_time ${traffic_time.value}.`);
+			if (self.config.debug) Log.info(`Module ${this.name}: trafficTimeInSeconds ${timeInSecondsWithTraffic}.`);
 			if (self.config.debug) Log.info(`Module ${this.name}: timeWithoutTrafficWithGap ${timeWithoutTrafficWithGap}.`);
-			if (traffic_time.value > timeWithoutTrafficWithGap) firstLineDiv.appendChild(symbolDetails);
+			if (timeInSecondsWithTraffic > timeWithoutTrafficWithGap) firstLineDiv.appendChild(symbolDetails);
 		}
 
 		var firstLineText = document.createElement("span");
-		if (self.config.mode == TravelModes.DRIVING) firstLineText.innerHTML = traffic_time.text;
-		else firstLineText.innerHTML = time.text;
+		if (self.config.mode === TravelModes.DRIVE) firstLineText.innerHTML = response.localizedValues.staticDuration.text;
+		else firstLineText.innerHTML = response.localizedValues.duration.text;
 		firstLineDiv.appendChild(firstLineText);
 		container.appendChild(firstLineDiv);
 
@@ -171,7 +173,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		return wrapper.innerHTML;
 	},
 
-	getLastUpdateContent () {
+	getLastUpdateContent() {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getLastUpdateContent.`);
 		var container = document.createElement("div");
 
@@ -183,7 +185,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		return container.innerHTML;
 	},
 
-	isTimesOld () {
+	isTimesOld() {
 		var now = new Date();
 		var interval = self.config.updateInterval + (self.config.timeLastUpdateWarning * 60 * 1000);
 		var timeDifference = now - self.timeLastUpdate;
@@ -192,11 +194,11 @@ Module.register("MMM-GoogleTrafficTimes", {
 		return timeDifference > interval;
 	},
 
-	getDestinationName (destination) {
+	getDestinationName(destination) {
 		return destination.name;
 	},
 
-	getDestinationNames () {
+	getDestinationNames() {
 		var names = [];
 		self.config.destinations.forEach((destination) => {
 			names.push(this.getDestinationName(destination));
@@ -205,24 +207,23 @@ Module.register("MMM-GoogleTrafficTimes", {
 		return names;
 	},
 
-	getSymbol () {
+	getSymbol() {
 		var symbolString = TravelSymbols.CAR;
-		if (self.mode == TravelModes.CYCLING) symbolString = TravelSymbols.BICYCLE;
-		if (self.mode == TravelModes.WALKING) symbolString = TravelSymbols.WALKING;
+		if (self.mode === TravelModes.BICYCLE) symbolString = TravelSymbols.BICYCLE;
+		if (self.mode === TravelModes.WALK) symbolString = TravelSymbols.WALKING;
 		return symbolString;
 	},
 
-	checkResponseIsOk (response) {
-		return response !== undefined && response["rows"] !== undefined && response["rows"].length > 0;
+	checkResponseIsOk(response) {
+		return response !== undefined && response.length > 0;
 	},
 
 	// Override dom generator.
-	getDom () {
+	getDom() {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getDom.`);
 		var wrapper = document.createElement("div");
 		if (self.config.horizontalLayout) wrapper.className = "mmmtraffic-horizontaly";
-		if (self.isScheduledNow())
-			self.getContent(wrapper);
+		self.getContent(wrapper);
 		return wrapper;
 	}
 });

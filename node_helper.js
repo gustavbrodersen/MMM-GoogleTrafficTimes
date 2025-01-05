@@ -1,72 +1,92 @@
 const NodeHelper = require("node_helper");
-const { Client } = require("@googlemaps/google-maps-services-js");
 const Log = require("logger");
-const Restrictions = require("./Costants");
+const {RoutesClient} = require("@googlemaps/routing").v2;
 
 module.exports = NodeHelper.create({
-	start () {
+	start() {
 		Log.info(`Starting node_helper for module: ${this.name}`);
 	},
 
-	async socketNotificationReceived (notification, payload) {
+	async socketNotificationReceived(notification, payload) {
 		if (notification === "GET_GOOGLE_TRAFFIC_TIMES") {
 			this.config = payload;
-			if (config.debug) Log.info(`Module ${this.name}: notification request received.`);
+			if (this.config.debug) Log.info(`Module ${this.name}: notification request received.`);
 			const times = await this.getTrafficTimes(this.config);
 			this.sendResponse(times, this.config);
 		}
 	},
 
-	async getTrafficTimes (config) {
-		if (config.debug)Log.info(`Module ${this.name}: inside getTrafficTimes method.`);
+	async getTrafficTimes(config) {
+		if (config.debug) Log.info(`Module ${this.name}: inside getTrafficTimes method.`);
 
-		const client = new Client({});
+		const client = new RoutesClient({apiKey: this.config.key});
 
-		var destinations = this.getDestinations(config);
+		const destinations = this.getDestinations(config);
+		const origin = {
+			waypoint: {
+				address: config.origin
+			},
+			routeModifiers: {
+				avoidTolls: config.avoidTolls,
+				avoidHighways: config.avoidHighways,
+				avoidFerries: config.avoidFerries
+			}
+		};
 
-		var avoid = [];
-		if (config.avoidHighways) avoid.push(Restrictions.AVOID_HIGHWAYS);
-		if (config.avoidTolls) avoid.push(Restrictions.AVOID_TOLLS);
-
-		var request = { key: config.key,
-			origins: [config.origin],
+		const request = {
+			origins: [origin],
 			destinations: destinations,
-			mode: config.mode,
-			departure_time: new Date(Date.now()),
-			traffic_model: config.trafficModel,
-			unitSystem: config.unitSystem,
-			avoid: avoid,
-			language: config.language };
+			travelMode: config.mode.toUpperCase(),
+			routingPreference: "TRAFFIC_AWARE_OPTIMAL",
+			trafficModel: config.trafficModel.toUpperCase(),
+			units: config.unitSystem.toUpperCase(),
+			languageCode: config.language
+		};
 
-		var response = await client.distancematrix({ params: request,
-			timeout: 3000 }).then((response) => {
-			response.data.rows[0].elements.forEach((element) => {
-				if (config.debug) Log.info(`Module ${this.name}: response -> ${JSON.stringify(element)}.`);
-			});
-			return response;
-		}).catch((error) => {
-			Log.error(`Module ${this.name}: error -> ${JSON.stringify(error.message)}.`);
+		const options = {
+			timout: 10_000,
+			otherArgs: {
+				headers: {
+					"X-Goog-FieldMask": "*"
+				}
+			}
+		}
+		const responseStream = await client.computeRouteMatrix(request, options);
+		const responseElements = [];
+		responseStream.on('data', (response) => {
+			if (config.debug) Log.info(`Module ${this.name}: response -> ${JSON.stringify(response)}.`);
+			responseElements.push(response);
+		})
+		return new Promise(function (resolve, reject) {
+			responseStream.on('end', () => resolve(responseElements));
+			responseStream.on('error', () => {
+				Log.error(`Module ${this.name}: error -> ${JSON.stringify(error.message)}.`);
+				return reject;
+			})
 		});
-		return response;
 	},
 
-	sendResponse (response, config) {
+	sendResponse(response, config) {
 		if (config.debug) Log.info(`Module ${this.name}: notification response send.`);
-		if (response !== undefined && response.data !== undefined) this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES_RESPONSE", response.data);
+		if (response !== undefined) this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES_RESPONSE", response);
 		else {
-			this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES_RESPONSE", {});
+			this.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES_RESPONSE", []);
 			Log.info(`Module ${this.name}: response NodeHelper: error calling google api.`);
 		}
 	},
 
-	getDestinationAddress (destination) {
+	getDestinationAddress(destination) {
 		return destination.address;
 	},
 
-	getDestinations (config) {
+	getDestinations(config) {
 		var destinations = [];
 		config.destinations.forEach((destination) => {
-			destinations.push(this.getDestinationAddress(destination));
+			destinations.push({
+				waypoint: {
+					address: this.getDestinationAddress(destination)
+				}
+			});
 		});
 		return destinations;
 	}
