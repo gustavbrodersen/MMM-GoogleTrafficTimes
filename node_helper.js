@@ -44,7 +44,7 @@ module.exports = NodeHelper.create({
 		};
 
 		const options = {
-			timout: 10_000,
+			timeout: 10_000,
 			otherArgs: {
 				headers: {
 					"X-Goog-FieldMask": "*"
@@ -59,7 +59,7 @@ module.exports = NodeHelper.create({
 		})
 		return new Promise(function (resolve, reject) {
 			responseStream.on('end', () => resolve(responseElements));
-			responseStream.on('error', () => {
+			responseStream.on('error', (error) => {
 				Log.error(`Module ${this.name}: error -> ${JSON.stringify(error.message)}.`);
 				return reject;
 			})
