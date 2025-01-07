@@ -9,3 +9,14 @@ const TravelSymbols = {
 	BICYCLE: "bicycle",
 	WALKING: "walking"
 };
+
+const OriginFormat = {
+	ADDRESS: "address",
+	COORDINATES: "coordinates",
+};
+
+module.exports = {
+	TravelModes,
+	TravelSymbols,
+	OriginFormat
+};

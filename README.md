@@ -9,6 +9,7 @@ If the in traffic travel time is longer then a symbol will be showed.
 - [Google API Key](#google-api-key)
 - [Offset Time](#offset-time)
 - [Schedules](#schedules)
+- [New addesses styles](#new-addesses-styles)
 - [Debug](#debug)
 - [Example Screenshot](#example-screenshot)
 - [Suggestions](#suggestions)
@@ -36,15 +37,20 @@ var config = {
             position: 'top_left',
             config: {
                 key: 'YOUR_KEY',
-                origin: 'SW1A 1AA',
+                origin: {
+                    address: 'SW1A 1AA',
+                    addressFormat: 'address', // 'coordinates'
+                },
                 destinations: [
 			        {
-			        	name: "Work",
-			        	address: "SW1A 2PW"
+			        	name: 'Work',
+			        	address: 'SW1A 2PW',
+                        addressFormat: 'address', // 'coordinates'
 			        },
 			        {
-			        	name: "Gym",
-			        	address: "XXX"
+			        	name: 'Gym',
+			        	address: 'xx.xxxxxx,xx.xxxxxx',
+                        addressFormat: 'coordinates', // 'coordinates'
 			        }
 		        ],
                 updateInterval: 900000,
@@ -52,10 +58,10 @@ var config = {
                 avoidTolls: false,
                 avoidFerries: false,
                 mode: 'drive',
-                language: "en-EN",
+                language: 'en-EN',
                 offsetTimePercentage: 25,
-		        lastUpdate: true,
-		        timeLastUpdateWarning: 1,
+                lastUpdate: true,
+                timeLastUpdateWarning: 1,
                 horizontalLayout: false,
                 schedules: [],
                 debug: false
@@ -66,6 +72,7 @@ var config = {
 ```
 * `key`: Your Google API key as described in the relevant section of this readme
 * `origin`: This is the location all travel times to the destinations below will be measured from.
+* `addressFormat`: The type of origin: `address` or `coordinates` (latitude,longitude)
 * `destinations`: Those are the locations you need travel times to (min 1, max 20).
 * `updateInterval`: Time (in milliseconds) before refreshing data. Default: 900000 -> 15 minutes.
 * `avoidHighways`: true or false, controls whether Highways are avoided (true) or utilised (false) in routing.
@@ -80,22 +87,29 @@ var config = {
 * `schedules`: parameter accepts an array of objects, each representing a schedule for content display (Default empty -> the module will be displayed at all times)
 * `debug`: true or false, shows logs on console (node_helper -> backend, module -> browser).
 
-The Destinations need to be entered in the form
+The Destinations with full address (Street , City, Country) need to be entered in the form
 ```javascript
 [
     {
-       	name: "Work",
-       	address: "SW1A 2PW"
+       	name: 'Work',
+       	address: 'SW1A 2PW',
+        addressFormat: 'address',
     }
 ]
 ```
-In the example config for Destination 1 we have a Label of Work with an Address of SW1A 2PW.
-
+If you like to use coordinates set
+```javascript
+[
+    {
+       	name: 'Work',
+       	address: 'xx.xxxxxx,xx.xxxxxx', //latitude,longitude no space
+        addressFormat: 'coordinates',
+    }
+]
+```
 The Label `name` appears as the title for each result as shown in the Example Screenshot below.
 
 In this release the origin and destination addresses have been tested across a large number of countries but certainly not all.
-
-Whilst the Google API can accept a multitude of formats from addresses to lat&long co-ordinates this script has some matching code to make the results format nicely and this could have issues with an as yet untried address format.
 
 # Google API Key
 In order to use this module you will need a Google Maps API which is available from the Google GCP console.
@@ -103,7 +117,7 @@ You will need to enable the following APIs for your key, Maps JavaScript API, Ge
 
 # Offset Time
 To determine if the road is busy or not, I decided to add the optimal time (meaning without traffic by Google Matrix) with an offset obtained using this simple formula:
-`timeWithoutTraffic + (timeWithoutTraffic * offset)`
+`timeWithoutTraffic + (timeWithoutTraffic * offset/100)`
 If the estimated time from Google Matrix is greater than this value, it means there is traffic, and the symbol is displayed.
 By default, the offset is set to 25%, which seems like a good compromise.
 
@@ -122,15 +136,15 @@ Here's an example of how to configure the schedules parameter:
 schedules: [
     {
         days: [0, 1, 2, 3, 4], // From Sunday to Thursday
-        startHH: "08",
-        startMM: "00",
-        endHH: "17",
-        endMM: "30"
+        startHH: '08',
+        startMM: '00',
+        endHH: '17',
+        endMM: '30'
     },
     {
         days: [5], // Friday
-        startHH: "08",
-        startMM: "30",
+        startHH: '08',
+        startMM: '30',
     },
     {
         days: [], // Display at all times

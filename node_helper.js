@@ -1,6 +1,7 @@
 const NodeHelper = require("node_helper");
 const Log = require("logger");
 const {RoutesClient} = require("@googlemaps/routing").v2;
+const Constants = require("./Constants");
 
 module.exports = NodeHelper.create({
 	start() {
@@ -21,11 +22,10 @@ module.exports = NodeHelper.create({
 
 		const client = new RoutesClient({apiKey: this.config.key});
 
-		const destinations = this.getDestinations(config);
+		const destinations = this.getDestinations(this.config);
+		const originWaypoint = this.getWaypoint(this.config.origin);
 		const origin = {
-			waypoint: {
-				address: config.origin
-			},
+			waypoint : originWaypoint.waypoint,
 			routeModifiers: {
 				avoidTolls: config.avoidTolls,
 				avoidHighways: config.avoidHighways,
@@ -82,12 +82,53 @@ module.exports = NodeHelper.create({
 	getDestinations(config) {
 		var destinations = [];
 		config.destinations.forEach((destination) => {
+			var waypoint = this.getWaypoint(destination)
 			destinations.push({
-				waypoint: {
-					address: this.getDestinationAddress(destination)
-				}
+				waypoint: waypoint.waypoint
 			});
 		});
 		return destinations;
+	},
+
+	getWaypoint(location) {
+		if (this.config.debug) Log.info(`Module ${this.name}: inside getOriginWaypoint method.`);
+
+		if (!location.address || !location.addressFormat) Log.info(`Module ${this.name}: Missing required configuration fields.`);
+
+		switch (location.addressFormat) {
+			case Constants.OriginFormat.ADDRESS:
+				return this.createAddressWaypoint(location.address);
+			case Constants.OriginFormat.COORDINATES:
+				return this.createCoordinatesWaypoint(location.address);
+			default:
+				Log.info(`Module ${this.name}: Unknown origin format '${location.originFormat}'.`);
+		}
+	},
+	
+	createAddressWaypoint(address) {
+		if (this.config.debug) Log.info(`Module ${this.name}: inside createAddressWaypoint method.`);
+
+		return {
+			waypoint: {
+				address: address
+			}
+		};
+	},
+	
+	createCoordinatesWaypoint(coordinates) {
+		if (this.config.debug) Log.info(`Module ${this.name}: inside createCoordinatesWaypoint method.`);
+
+		const [latitude, longitude] = coordinates.split(",").map(coord => coord.trim());
+		if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) Log.info(`Module ${this.name}: Invalid coordinates format.`);
+		return {
+			waypoint: {
+				location: {
+					latLng: {
+						latitude: parseFloat(latitude),
+						longitude: parseFloat(longitude)
+					}
+				}
+			}
+		};
 	}
 });

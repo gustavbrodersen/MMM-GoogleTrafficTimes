@@ -3,15 +3,21 @@ Module.register("MMM-GoogleTrafficTimes", {
 	defaults: {
 		key: "",
 		mode: "drive",
-		origin: "SW1A 1AA",
+		origin: {
+			address: "SW1A 2PW",
+			addressFormat: 'address',
+		},
+		originFormat: 'address',
 		destinations: [
 			{
 				name: "Work",
-				address: "SW1A 2PW"
+				address: "SW1A 2PW",
+				addressFormat: 'address',
 			},
 			{
 				name: "Gym",
-				address: "XXX"
+				address: "XXX",
+				addressFormat: 'address',
 			}
 		],
 		updateInterval: 900000,
@@ -130,8 +136,9 @@ Module.register("MMM-GoogleTrafficTimes", {
 			return;
 		}
 
-		var timeInSeconds = response.staticDuration.seconds;
-		var timeInSecondsWithTraffic = response.duration.seconds;
+		var timeInSeconds = parseFloat(response.staticDuration.seconds);
+		var timeInSecondsRightNow = parseFloat(response.duration.seconds);
+		if (self.config.debug) Log.info(`Module ${this.name}: destination ${destination}, timeInSeconds ${timeInSeconds} | timeInSecondsRightNow ${timeInSecondsRightNow}.`);
 		var wrapper = document.createElement("div");
 		var container = document.createElement("div");
 		container.className = "mmmtraffic-container";
@@ -154,11 +161,10 @@ Module.register("MMM-GoogleTrafficTimes", {
 		if (self.config.mode === TravelModes.DRIVE && self.config.showSymbolDetails) {
 			var symbolDetails = document.createElement("span");
 			// let's give traffic a little gap of offsetTimePercentage before showing the traffic symbol
-			var timeWithoutTrafficWithGap = timeInSeconds + (timeInSeconds * (self.config.offsetTimePercentage / 100));
+			var timeInSecondsWithGap = timeInSeconds + (timeInSeconds * (self.config.offsetTimePercentage / 100));
 			symbolDetails.className = "fa fa-users symbol";
-			if (self.config.debug) Log.info(`Module ${this.name}: trafficTimeInSeconds ${timeInSecondsWithTraffic}.`);
-			if (self.config.debug) Log.info(`Module ${this.name}: timeWithoutTrafficWithGap ${timeWithoutTrafficWithGap}.`);
-			if (timeInSecondsWithTraffic > timeWithoutTrafficWithGap) firstLineDiv.appendChild(symbolDetails);
+			if (self.config.debug) Log.info(`Module ${this.name}: destination ${destination}, timeInSecondsWithTraffic ${timeInSecondsRightNow} | timeInSecondsWithGap ${timeInSecondsWithGap}.`);
+			if (timeInSecondsRightNow > timeInSecondsWithGap) firstLineDiv.appendChild(symbolDetails);
 		}
 
 		var firstLineText = document.createElement("span");
@@ -189,8 +195,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 		var now = new Date();
 		var interval = self.config.updateInterval + (self.config.timeLastUpdateWarning * 60 * 1000);
 		var timeDifference = now - self.timeLastUpdate;
-		console.log(`interval: ${interval}`);
-		console.log(`timeDifference: ${timeDifference}`);
+		if (self.config.debug) Log.info(`Module ${self.name}:interval: ${interval}`);
+		if (self.config.debug) Log.info(`Module ${self.name}:timeDifference: ${timeDifference}`);
 		return timeDifference > interval;
 	},
 
