@@ -113,7 +113,7 @@ In this release the origin and destination addresses have been tested across a l
 
 # Google API Key
 In order to use this module you will need a Google Maps API which is available from the Google GCP console.
-You will need to enable the following APIs for your key, Maps JavaScript API, Geocoding API, Distance Matrix API.
+You will need to enable the following APIs for your key, Maps JavaScript API, Geocoding API, Distance Matrix API and Routes API.
 
 # Offset Time
 To determine if the road is busy or not, I decided to add the optimal time (meaning without traffic by Google Matrix) with an offset obtained using this simple formula:
