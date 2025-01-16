@@ -168,8 +168,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 
 		var firstLineText = document.createElement("span");
-		if (self.config.mode === TravelModes.DRIVE) firstLineText.innerHTML = response.localizedValues.staticDuration.text;
-		else firstLineText.innerHTML = response.localizedValues.duration.text;
+		if (self.config.mode === TravelModes.DRIVE && self.isScheduledNow()) firstLineText.innerHTML = response.localizedValues.duration.text;
+		else firstLineText.innerHTML = response.localizedValues.staticDuration.text;
 		firstLineDiv.appendChild(firstLineText);
 		container.appendChild(firstLineDiv);
 
