@@ -64,6 +64,7 @@ var config = {
                 timeLastUpdateWarning: 1,
                 horizontalLayout: false,
                 schedules: [],
+		        showTrafficTimesOutsideOfSchedule: false,
                 debug: false
             },
         }
@@ -85,6 +86,7 @@ var config = {
 * `timeLastUpdateWarning`: Specifies time (in minutes) that have to elapse since last failed data update to display the warning message. (Default 1 minute.)
 * `horizontalLayout`: true or false, Organize results on horizonal line. (Default false.)
 * `schedules`: parameter accepts an array of objects, each representing a schedule for content display (Default empty -> the module will be displayed at all times)
+* `showTrafficTimesOutsideOfSchedule`: true or false, shows the traffic times even if current time not in any schedule. (Default false)
 * `debug`: true or false, shows logs on console (node_helper -> backend, module -> browser).
 
 The Destinations with full address (Street , City, Country) need to be entered in the form

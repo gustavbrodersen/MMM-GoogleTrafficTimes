@@ -34,6 +34,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		timeLastUpdateWarning: 1,
 		horizontalLayout: false,
 		schedules: [],
+		showTrafficTimesOutsideOfSchedule: false,
 		debug: false
 	},
 
@@ -168,8 +169,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 
 		var firstLineText = document.createElement("span");
-		if (self.config.mode === TravelModes.DRIVE) firstLineText.innerHTML = response.localizedValues.staticDuration.text;
-		else firstLineText.innerHTML = response.localizedValues.duration.text;
+		if (self.config.mode === TravelModes.DRIVE && self.isScheduledNow()) firstLineText.innerHTML = response.localizedValues.duration.text;
+		else firstLineText.innerHTML = response.localizedValues.staticDuration.text;
 		firstLineDiv.appendChild(firstLineText);
 		container.appendChild(firstLineDiv);
 
@@ -229,7 +230,11 @@ Module.register("MMM-GoogleTrafficTimes", {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getDom.`);
 		var wrapper = document.createElement("div");
 		if (self.config.horizontalLayout) wrapper.className = "mmmtraffic-horizontaly";
-		self.getContent(wrapper);
+		if (self.config.showTrafficTimesOutsideOfSchedule) {
+			self.getContent(wrapper);
+		} else if (self.isScheduledNow()) {
+			self.getContent(wrapper);
+		}
 		return wrapper;
 	}
 });
