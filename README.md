@@ -9,7 +9,6 @@ If the in traffic travel time is longer then a symbol will be showed.
 - [Google API Key](#google-api-key)
 - [Offset Time](#offset-time)
 - [Schedules](#schedules)
-- [New addesses styles](#new-addesses-styles)
 - [Debug](#debug)
 - [Example Screenshot](#example-screenshot)
 - [Suggestions](#suggestions)
@@ -42,35 +41,35 @@ var config = {
                     addressFormat: 'address',
                 },
                 destinations: [
-			        {
-			        	name: 'Work',
-			        	address: 'SW1A 2PW',
-                        addressFormat: 'address',
-                        mode: 'drive',
-						avoidHighways: true,
-						avoidTolls: true,
-			        },
-                    {
-			        	name: 'Work Highways',
-			        	address: 'SW1A 2PW',
-                        addressFormat: 'address',
-                        mode: 'drive',
-						avoidHighways: false,
-						avoidTolls: false,
-			        },
-			        {
-			        	name: 'Gym',
-			        	address: 'xx.xxxxxx,xx.xxxxxx',
-                        addressFormat: 'coordinates',
-                        mode: 'walk',
-			        },
-			        {
-			        	name: 'Gym 2',
-			        	address: 'xx.xxxxxx,xx.xxxxxx',
-                        addressFormat: 'coordinates',
-                        mode: 'bicycle',
-			        }
-		        ],
+			{
+			       	name: 'Work',
+			       	address: 'SW1A 2PW',
+                        	addressFormat: 'address',
+                        	mode: 'drive',
+				avoidHighways: true,
+				avoidTolls: true,
+			},
+	   		{
+				name: 'Work Highways',
+			       	address: 'SW1A 2PW',
+                        	addressFormat: 'address',
+                        	mode: 'drive',
+				avoidHighways: false,
+				avoidTolls: false,
+			},
+			{
+			       	name: 'Gym',
+			       	address: 'xx.xxxxxx,xx.xxxxxx',
+                        	addressFormat: 'coordinates',
+                        	mode: 'walk',
+			},
+			{
+			       	name: 'Gym 2',
+			       	address: 'xx.xxxxxx,xx.xxxxxx',
+                        	addressFormat: 'coordinates',
+                        	mode: 'bicycle',
+			}
+		],
                 updateInterval: 900000,
                 avoidHighways: false,
                 avoidTolls: false,
@@ -82,7 +81,7 @@ var config = {
                 timeLastUpdateWarning: 1,
                 horizontalLayout: false,
                 schedules: [],
-		        showTrafficTimesOutsideOfSchedule: false,
+		showTrafficTimesOutsideOfSchedule: false,
                 debug: false
             },
         }
@@ -139,6 +138,7 @@ In this release the origin and destination addresses have been tested across a l
 # Google API Key
 In order to use this module you will need a Google Maps API which is available from the Google GCP console.
 You will need to enable the following APIs for your key, Maps JavaScript API, Geocoding API, Distance Matrix API and Routes API.
+
 ⚠ Important Note:
 Each group of destinations that differs by travel mode, highway avoidance, or toll avoidance generates a separate set of API calls. If there are many variations among your destinations, this can lead to a high number of requests, potentially increasing costs. Please keep this in mind when configuring the module to avoid unexpected charges.
 
