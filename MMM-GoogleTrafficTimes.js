@@ -123,9 +123,10 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 	getContent(wrapper) {
 		if (self.checkResponseIsOk(self.times)) {
-			var names = self.getDestinationNames(self.config);
 			var results = self.times;
-			for (var j = 0; j < results.length; j++) wrapper.innerHTML += self.getDestinationContent(names[j], results.find((element) => element.destinationIndex === j));
+			results.forEach(element => {
+				wrapper.innerHTML += self.getDestinationContent(element.destination, element.googleResponse)
+			});
 		}
 		if (self.config.lastUpdate && self.isTimesOld()) wrapper.innerHTML += self.getLastUpdateContent();
 	},
@@ -137,9 +138,9 @@ Module.register("MMM-GoogleTrafficTimes", {
 			return;
 		}
 
-		var timeInSeconds = parseFloat(response.staticDuration.seconds);
-		var timeInSecondsRightNow = parseFloat(response.duration.seconds);
-		if (self.config.debug) Log.info(`Module ${this.name}: destination ${destination}, timeInSeconds ${timeInSeconds} | timeInSecondsRightNow ${timeInSecondsRightNow}.`);
+		var timeInSeconds = parseFloat(response.durationTime);
+		var timeInSecondsRightNow = parseFloat(response.durationTrafficTime);
+		if (self.config.debug) Log.info(`Module ${this.name}: destination ${destination.name}, timeInSeconds ${timeInSeconds} | timeInSecondsRightNow ${timeInSecondsRightNow}.`);
 		var wrapper = document.createElement("div");
 		var container = document.createElement("div");
 		container.className = "mmmtraffic-container";
@@ -149,7 +150,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		var secondLineDiv = document.createElement("div");
 		secondLineDiv.className = "normal small mmmtraffic-secondline";
 
-		var symbolString = this.getSymbol(self.config.mode);
+		var symbolString = this.getSymbol(destination.mode);
 
 		if (self.config.showSymbol) {
 			var symbol = document.createElement("span");
@@ -159,22 +160,22 @@ Module.register("MMM-GoogleTrafficTimes", {
 
 		// symbol details only with driving mode, others do not have this info
 		if (self.config.debug) Log.info(`Module ${this.name}: showSymbolDetails ${self.config.showSymbolDetails}.`);
-		if (self.config.mode === TravelModes.DRIVE && self.config.showSymbolDetails) {
+		if (destination.mode === TravelModes.DRIVE && self.config.showSymbolDetails) {
 			var symbolDetails = document.createElement("span");
 			// let's give traffic a little gap of offsetTimePercentage before showing the traffic symbol
 			var timeInSecondsWithGap = timeInSeconds + (timeInSeconds * (self.config.offsetTimePercentage / 100));
 			symbolDetails.className = "fa fa-users symbol";
-			if (self.config.debug) Log.info(`Module ${this.name}: destination ${destination}, timeInSecondsWithTraffic ${timeInSecondsRightNow} | timeInSecondsWithGap ${timeInSecondsWithGap}.`);
+			if (self.config.debug) Log.info(`Module ${this.name}: destination ${destination.name}, timeInSecondsWithTraffic ${timeInSecondsRightNow} | timeInSecondsWithGap ${timeInSecondsWithGap}.`);
 			if (timeInSecondsRightNow > timeInSecondsWithGap) firstLineDiv.appendChild(symbolDetails);
 		}
 
 		var firstLineText = document.createElement("span");
-		if (self.config.mode === TravelModes.DRIVE && self.isScheduledNow()) firstLineText.innerHTML = response.localizedValues.duration.text;
-		else firstLineText.innerHTML = response.localizedValues.staticDuration.text;
+		if (destination.mode === TravelModes.DRIVE && self.isScheduledNow()) firstLineText.innerHTML = response.durationTrafficTimeText;
+		else firstLineText.innerHTML = response.durationText;
 		firstLineDiv.appendChild(firstLineText);
 		container.appendChild(firstLineDiv);
 
-		secondLineDiv.innerHTML = destination;
+		secondLineDiv.innerHTML = destination.name;
 		container.appendChild(secondLineDiv);
 		wrapper.appendChild(container);
 		return wrapper.innerHTML;
@@ -214,10 +215,11 @@ Module.register("MMM-GoogleTrafficTimes", {
 		return names;
 	},
 
-	getSymbol() {
+	getSymbol(mode) {
+		if (self.config.debug) Log.info(`Module ${self.name}: inside getSymbol.`);
 		var symbolString = TravelSymbols.CAR;
-		if (self.mode === TravelModes.BICYCLE) symbolString = TravelSymbols.BICYCLE;
-		if (self.mode === TravelModes.WALK) symbolString = TravelSymbols.WALKING;
+		if (mode === TravelModes.BICYCLE) symbolString = TravelSymbols.BICYCLE;
+		if (mode === TravelModes.WALK) symbolString = TravelSymbols.WALKING;
 		return symbolString;
 	},
 

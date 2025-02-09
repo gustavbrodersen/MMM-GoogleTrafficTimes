@@ -39,18 +39,36 @@ var config = {
                 key: 'YOUR_KEY',
                 origin: {
                     address: 'SW1A 1AA',
-                    addressFormat: 'address', // 'coordinates'
+                    addressFormat: 'address',
                 },
                 destinations: [
 			        {
 			        	name: 'Work',
 			        	address: 'SW1A 2PW',
-                        addressFormat: 'address', // 'coordinates'
+                        addressFormat: 'address',
+                        mode: 'drive',
+						avoidHighways: true,
+						avoidTolls: true,
+			        },
+                    {
+			        	name: 'Work Highways',
+			        	address: 'SW1A 2PW',
+                        addressFormat: 'address',
+                        mode: 'drive',
+						avoidHighways: false,
+						avoidTolls: false,
 			        },
 			        {
 			        	name: 'Gym',
 			        	address: 'xx.xxxxxx,xx.xxxxxx',
-                        addressFormat: 'coordinates', // 'coordinates'
+                        addressFormat: 'coordinates',
+                        mode: 'walk',
+			        },
+			        {
+			        	name: 'Gym 2',
+			        	address: 'xx.xxxxxx,xx.xxxxxx',
+                        addressFormat: 'coordinates',
+                        mode: 'bicycle',
 			        }
 		        ],
                 updateInterval: 900000,
@@ -96,6 +114,9 @@ The Destinations with full address (Street , City, Country) need to be entered i
        	name: 'Work',
        	address: 'SW1A 2PW',
         addressFormat: 'address',
+        mode: 'drive', // default drive - also valid walk or bicycle
+        avoidHighways: true,    // default false
+        avoidTolls: true,   // default false
     }
 ]
 ```
@@ -109,13 +130,17 @@ If you like to use coordinates set
     }
 ]
 ```
-The Label `name` appears as the title for each result as shown in the Example Screenshot below.
+⚠ Important Note:
+Each unique combination of travel mode, highway avoidance, and toll avoidance creates a separate request to the API. If your configuration includes many different variations, this can result in a high number of API calls, potentially increasing costs. Be mindful of this when setting up your destinations to avoid unexpected charges.
 
+The Label `name` appears as the title for each result as shown in the Example Screenshot below.
 In this release the origin and destination addresses have been tested across a large number of countries but certainly not all.
 
 # Google API Key
 In order to use this module you will need a Google Maps API which is available from the Google GCP console.
 You will need to enable the following APIs for your key, Maps JavaScript API, Geocoding API, Distance Matrix API and Routes API.
+⚠ Important Note:
+Each group of destinations that differs by travel mode, highway avoidance, or toll avoidance generates a separate set of API calls. If there are many variations among your destinations, this can lead to a high number of requests, potentially increasing costs. Please keep this in mind when configuring the module to avoid unexpected charges.
 
 # Offset Time
 To determine if the road is busy or not, I decided to add the optimal time (meaning without traffic by Google Matrix) with an offset obtained using this simple formula:
