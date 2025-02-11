@@ -35,7 +35,6 @@ module.exports = NodeHelper.create({
 		const groupedDestinations = this.groupByModeHighwaysTolls(this.config.destinations);
 		if (config.debug) Log.info(`Module ${this.name}: groupedDestinations ${JSON.stringify(groupedDestinations)}.`);
 	
-		// Creiamo un array di Promises per tutte le richieste
 		const requestPromises = Object.keys(groupedDestinations).map(async (key) => {
 			const [mode, avoidHighways, avoidTolls] = key.split("_");
 			const destinationsByKey = groupedDestinations[key];
@@ -43,6 +42,8 @@ module.exports = NodeHelper.create({
 			if (config.debug) Log.info(`Module ${this.name}: destinationsByKey -> ${JSON.stringify(destinationsByKey)}.`);
 
 			const destinations = this.getDestinationsWaypoint(destinationsByKey);
+			if (config.debug) Log.info(`Module ${this.name}: destinations -> ${JSON.stringify(destinations)}.`);
+
 			const originWaypoint = this.getWaypoint(this.config.origin);
 			
 			const origin = {
@@ -63,22 +64,23 @@ module.exports = NodeHelper.create({
 				languageCode: config.language
 			};
 	
-			// Eseguiamo la richiesta e ritorniamo una Promise
 			return new Promise((resolve, reject) => {
-				let index = 0; // Indice per tenere traccia delle destinazioni
-
 				const responseStream = client.computeRouteMatrix(request, options);
-	
+			
 				responseStream.on('data', (response) => {
-					if (config.debug) Log.info(`Module ${this.name}: partial response -> index:${index} ${JSON.stringify(response)}.`);
-					const fullResponse = {
-						destination: destinationsByKey[index],
-						googleResponse : this.getDataFromGoogleResponse(response), // Manteniamo i dati originali
-					};
-					responseElements.push(fullResponse);
-					index++; // Passiamo alla destinazione successiva
+					const destinationIndex = response.destinationIndex; // Google's index
+					if (destinationIndex !== undefined && destinationsByKey[destinationIndex]) {
+						const fullResponse = {
+							destination: destinationsByKey[destinationIndex],
+							googleResponse: this.getDataFromGoogleResponse(response),
+						};
+						responseElements.push(fullResponse);
+						if (config.debug) Log.info(`Module ${this.name}: partial response -> index:${destinationIndex} ${JSON.stringify(fullResponse)}.`);
+					} else {
+						Log.warn(`Module ${this.name}: received response with unexpected index: ${destinationIndex}`);
+					}
 				});
-	
+			
 				responseStream.on('end', () => resolve());
 				responseStream.on('error', (error) => {
 					Log.error(`Module ${this.name}: error -> ${JSON.stringify(error.message)}.`);
@@ -87,11 +89,8 @@ module.exports = NodeHelper.create({
 			});
 		});
 	
-		// Aspettiamo che tutte le richieste siano completate
 		await Promise.all(requestPromises);
-	
 		if (config.debug) Log.info(`Module ${this.name}: response complete -> ${JSON.stringify(responseElements)}.`);
-	
 		return responseElements;
 	},
 
@@ -111,6 +110,7 @@ module.exports = NodeHelper.create({
 	getDestinationsWaypoint(destinationsGrouped) {
 		var destinations = [];
 		destinationsGrouped.forEach((destination) => {
+			if (this.config.debug) Log.info(`Module ${this.name}: inside getDestinationsWaypoint method ${JSON.stringify(destination)}.`);
 			var waypoint = this.getWaypoint(destination)
 			destinations.push({
 				waypoint: waypoint.waypoint
@@ -121,7 +121,6 @@ module.exports = NodeHelper.create({
 
 	getWaypoint(location) {
 		if (this.config.debug) Log.info(`Module ${this.name}: inside getOriginWaypoint method.`);
-
 		if (!location.address || !location.addressFormat) Log.info(`Module ${this.name}: Missing required configuration fields.`);
 
 		switch (location.addressFormat) {
