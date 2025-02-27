@@ -13,11 +13,15 @@ Module.register("MMM-GoogleTrafficTimes", {
 				name: "Work",
 				address: "SW1A 2PW",
 				addressFormat: 'address',
+				schedules: [],
+				showDestinationOutsideScheduleWithoutTraffic: true,
 			},
 			{
 				name: "Gym",
 				address: "XXX",
 				addressFormat: 'address',
+				schedules: [],
+				showDestinationOutsideScheduleWithoutTraffic: true,
 			}
 		],
 		updateInterval: 900000,
@@ -33,8 +37,6 @@ Module.register("MMM-GoogleTrafficTimes", {
 		lastUpdate: true,
 		timeLastUpdateWarning: 1,
 		horizontalLayout: false,
-		schedules: [],
-		showTrafficTimesOutsideOfSchedule: false,
 		debug: false
 	},
 
@@ -43,11 +45,10 @@ Module.register("MMM-GoogleTrafficTimes", {
 	},
 
 	getScripts() {
-		return [this.file("./Constants.js")];
+		return [this.file("./Constants.js"), this.file("./ScheduleHelper.js")];
 	},
 
 	start() {
-
 		self = this;
 		Log.info(`Starting module: ${this.name}`);
 		this.config.mode = this.config.mode.toLowerCase();
@@ -64,38 +65,11 @@ Module.register("MMM-GoogleTrafficTimes", {
 		self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", this.config);
 		if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
 		setInterval(function () {
-			if (self.isScheduledNow()) {
-				self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
-				if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
-			}
+			self.sendSocketNotification("GET_GOOGLE_TRAFFIC_TIMES", self.config);
+			if (self.config.debug) Log.info(`Module ${this.name}: notification request send.`);
+			if (self.config.debug) Log.info(`Module ${this.name}: next update in ${self.config.updateInterval/60000} minutes.`);
 		}, this.config.updateInterval);
 
-	},
-
-	isScheduledNow() {
-		if (self.config.schedules && self.config.schedules.length === 0) return true;
-		var now = new Date();
-		var currentDay = now.getDay();
-		var currentHour = now.getHours();
-		var currentMinute = now.getMinutes();
-
-		for (var item of self.config.schedules) {
-			if (item.days.includes(currentDay) || item.days.length === 0) {
-				const startHH = item.startHH === null || item.startHH === undefined || item.startHH === "" ? null : parseInt(item.startHH);
-				const startMM = item.startMM === null || item.startMM === undefined || item.startMM === "" ? null : parseInt(item.startMM);
-				const endHH = item.endHH === null || item.endHH === undefined || item.endHH === "" ? null : parseInt(item.endHH);
-				const endMM = item.endMM === null || item.endMM === undefined || item.endMM === "" ? null : parseInt(item.endMM);
-
-				if ((startHH === null && endHH === null)
-					|| (startHH === null && currentHour < endHH)
-					|| (endHH === null && currentHour > startHH)
-					|| ((currentHour > startHH || (currentHour === startHH && currentMinute >= startMM))
-						&& (currentHour < endHH || (currentHour === endHH && currentMinute < endMM)))
-				) return true;
-			}
-		}
-		if (self.config.debug) Log.info(`Module ${self.name}: now is not in schedules.`);
-		return false;
 	},
 
 	async socketNotificationReceived(notification, payload) {
@@ -159,8 +133,8 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 
 		// symbol details only with driving mode, others do not have this info
-		if (self.config.debug) Log.info(`Module ${this.name}: showSymbolDetails ${self.config.showSymbolDetails}.`);
-		if (destination.mode === TravelModes.DRIVE && self.config.showSymbolDetails) {
+		if (self.config.debug) Log.info(`Module ${this.name}: showSymbolDetails ${self.config.showSymbolDetails} | travel move ${destination.mode}.`);
+		if (destination.mode === TravelModes.DRIVE && self.config.showSymbolDetails && ScheduleHelper.isScheduledNow(destination.schedules)) {
 			var symbolDetails = document.createElement("span");
 			// let's give traffic a little gap of offsetTimePercentage before showing the traffic symbol
 			var timeInSecondsWithGap = timeInSeconds + (timeInSeconds * (self.config.offsetTimePercentage / 100));
@@ -170,7 +144,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		}
 
 		var firstLineText = document.createElement("span");
-		if (destination.mode === TravelModes.DRIVE && self.isScheduledNow()) firstLineText.innerHTML = response.durationTrafficTimeText;
+		if (destination.mode === TravelModes.DRIVE && ScheduleHelper.isScheduledNow(destination.schedules)) firstLineText.innerHTML = response.durationTrafficTimeText;
 		else firstLineText.innerHTML = response.durationText;
 		firstLineDiv.appendChild(firstLineText);
 		container.appendChild(firstLineDiv);
@@ -232,11 +206,7 @@ Module.register("MMM-GoogleTrafficTimes", {
 		if (self.config.debug) Log.info(`Module ${self.name}: inside getDom.`);
 		var wrapper = document.createElement("div");
 		if (self.config.horizontalLayout) wrapper.className = "mmmtraffic-horizontaly";
-		if (self.config.showTrafficTimesOutsideOfSchedule) {
-			self.getContent(wrapper);
-		} else if (self.isScheduledNow()) {
-			self.getContent(wrapper);
-		}
+		self.getContent(wrapper);
 		return wrapper;
 	}
 });

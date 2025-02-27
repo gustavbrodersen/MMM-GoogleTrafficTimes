@@ -2,6 +2,7 @@ const NodeHelper = require("node_helper");
 const Log = require("logger");
 const {RoutesClient} = require("@googlemaps/routing").v2;
 const Constants = require("./Constants");
+const ScheduleHelper = require("./ScheduleHelper");
 
 module.exports = NodeHelper.create({
 	start() {
@@ -38,11 +39,15 @@ module.exports = NodeHelper.create({
 		const requestPromises = Object.keys(groupedDestinations).map(async (key) => {
 			const [mode, avoidHighways, avoidTolls] = key.split("_");
 			const destinationsByKey = groupedDestinations[key];
-
 			if (config.debug) Log.info(`Module ${this.name}: destinationsByKey -> ${JSON.stringify(destinationsByKey)}.`);
 
-			const destinations = this.getDestinationsWaypoint(destinationsByKey);
-			if (config.debug) Log.info(`Module ${this.name}: destinations -> ${JSON.stringify(destinations)}.`);
+			const destinationsByKeyToShow = destinationsByKey.filter(destination => 
+				ScheduleHelper.isDestinationToCalculate(config.debug, destination)
+			);
+			if (config.debug) Log.info(`Module ${this.name}: destinationsByKeyToShow -> ${JSON.stringify(destinationsByKeyToShow)}.`);
+
+			const destinations = this.getDestinationsWaypoint(destinationsByKeyToShow);
+			if (config.debug) Log.info(`Module ${this.name}: destinations waypoint -> ${JSON.stringify(destinations)}.`);
 
 			const originWaypoint = this.getWaypoint(this.config.origin);
 			
@@ -54,6 +59,11 @@ module.exports = NodeHelper.create({
 					avoidFerries: this.isModeDrive(mode) ? config.avoidFerries : false
 				}
 			};
+
+			if (destinations.length === 0) {
+				if (config.debug) Log.info(`Module ${this.name}: No destinations to process, skipping request.`);
+				return Promise.resolve();
+			}
 	
 			const request = {
 				origins: [origin],
@@ -69,9 +79,9 @@ module.exports = NodeHelper.create({
 			
 				responseStream.on('data', (response) => {
 					const destinationIndex = response.destinationIndex; // Google's index
-					if (destinationIndex !== undefined && destinationsByKey[destinationIndex]) {
+					if (destinationIndex !== undefined && destinationsByKeyToShow[destinationIndex]) {
 						const fullResponse = {
-							destination: destinationsByKey[destinationIndex],
+							destination: destinationsByKeyToShow[destinationIndex],
 							googleResponse: this.getDataFromGoogleResponse(response),
 						};
 						responseElements.push(fullResponse);
@@ -164,10 +174,14 @@ module.exports = NodeHelper.create({
 		const grouped = {};
 	
 		data.forEach(item => {
-			const mode = item.mode || Constants.TravelModes.DRIVE;
+			if (!item.mode || item.mode.trim() === "") {
+				item.mode = Constants.TravelModes.DRIVE;
+			}			
+			const mode = item.mode;
+			if (this.config.debug) Log.info(`Module ${this.name}: inside groupByModeHighwaysTolls ${item}.`);
+
 			const avoidHighways = item.avoidHighways ?? false;
 			const avoidTolls = item.avoidTolls ?? false;
-	
 			const key = `${mode}_${avoidHighways}_${avoidTolls}`;	
 			if (!grouped[key]) grouped[key] = [];
 			grouped[key].push(item);

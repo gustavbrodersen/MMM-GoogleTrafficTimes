@@ -15,8 +15,16 @@ const OriginFormat = {
 	COORDINATES: "coordinates",
 };
 
-module.exports = {
-	TravelModes,
-	TravelSymbols,
-	OriginFormat
-};
+if (typeof module !== 'undefined' && module.exports) {
+    // Node.js environment
+    module.exports = {
+        TravelModes,
+        TravelSymbols,
+        OriginFormat
+    };
+} else if (typeof window !== 'undefined') {
+    // Browser environment
+    window.TravelModes = TravelModes;
+    window.TravelSymbols = TravelSymbols;
+    window.OriginFormat = OriginFormat;
+}
