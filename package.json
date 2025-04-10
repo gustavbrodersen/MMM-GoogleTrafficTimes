@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/Jacopo1891/MMM-GoogleTrafficTimes#readme",
   "dependencies": {
-    "@googlemaps/routing": "^1.4.0",
-    "core-js":"^3.37.1"
+    "core-js": "^3.37.1",
+    "dotenv": "^16.4.7",
+    "request": "^2.88.2"
   }
 }
